@@ -1,0 +1,12 @@
+{
+  "schema_version": "okx_public_ci_promotion_retry_v1",
+  "task_id": "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion_FullFix",
+  "trigger_reason": "PRIVATE_PROMOTION_TOKEN_CONFIGURED",
+  "promotion_target": "cobelinfuture-Kobel/okx_bot_private:public-verified",
+  "pull_request_promotion_allowed": false,
+  "private_main_direct_write_allowed": false,
+  "shadow_only": true,
+  "effective": false,
+  "execution_allowed": false,
+  "runtime_proof": "NOT_CLAIMED"
+}
