@@ -1,0 +1,78 @@
+name: OKX S10 RuntimeReloadQA
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s10-runtime-reload-qa.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - working-directory: private
+        run: python3 -m pip install --disable-pip-version-check pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from adaptive_defense.five_axis_control_plan_shadow_builder import BUILDER_VERSION
+          from adaptive_defense.service_floor_signal_readiness import evaluate_service_floor_signal_readiness
+          assert BUILDER_VERSION=="S10.ServiceFloorSignalReadiness.FullFix.v1"
+          position={"model_state":"READY","buy_effect_by_leg":{"NET":"INVENTORY_INCREASING"},"sell_effect_by_leg":{"NET":"INVENTORY_REDUCING"}}
+          count={"resolver_state":"RESOLVED","source_digest":"c","repair_consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"c"},"replenish_consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"c"}}
+          sizing={"resolver_state":"RESOLVED","source_digest":"s","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s"}}
+          tick={"realization_state":"READY","rounding_never_narrows":True,"realized_buy_spacing_bps":20,"realized_sell_spacing_bps":20}
+          r=evaluate_service_floor_signal_readiness(inst_id="R",policy={"minimum_exit_order_count":1,"minimum_exit_notional":10,"maximum_exit_spacing_bps":25,"maximum_quote_age_ms":5000},position_leg_model=position,order_count_authority=count,directional_sizing=sizing,tick_realization=tick,snapshot_ids={"position":"x","count":"x","sizing":"x","spacing":"x"},observed_buy_order_count=2,observed_sell_order_count=2,observed_buy_notional=20,observed_sell_notional=20,quote_age_ms=1000)
+          assert r["service_floor_signal_state"]=="READY"
+          assert r["snapshot_coherence_state"]=="MATCH"
+          assert r["sell"]["coverage_state"]=="COVERED"
+          assert r["consumer_readback"]["consumer_source_digest"]==r["service_floor_source_digest"]
+          assert r["shadow_only"] and not r["effective"] and not r["execution_allowed"]
+          assert not r["order_mutation_allowed"]
+          PY
+          python3 -m pytest -q tests/test_service_floor_signal_readiness.py tests/test_order_count_authority.py tests/test_directional_sizing_authority.py tests/test_position_leg_model.py tests/test_five_axis_control_plan_shadow_builder.py
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin github-actions/s10-runtime-evidence >/dev/null 2>&1; then
+            git fetch origin github-actions/s10-runtime-evidence
+            git switch -C github-actions/s10-runtime-evidence origin/github-actions/s10-runtime-evidence
+            git merge --no-edit origin/main
+          else
+            git switch -c github-actions/s10-runtime-evidence origin/main
+          fi
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s10
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          p=os.environ["QA_OUTCOME"]=="success"
+          e={"schema_version":"five_axis_runtime_reload_qa_v1","task_id":"FiveAxisAdaptiveMM-S10_ServiceFloorSignalReadiness_RuntimeReloadQA","status":"PASS" if p else "FAIL","private_main_commit":os.environ["PRIVATE_MAIN_COMMIT"],"fresh_process_import":"PASS" if p else "FAIL","snapshot_coherence_result":"PASS" if p else "FAIL","consumer_readback_result":"PASS" if p else "FAIL","focused_tests_result":"PASS" if p else "FAIL","shadow_only":True,"effective":False,"execution_allowed":False,"okx_api_accessed":False,"orders_modified":False,"workflow_run_id":os.environ["GITHUB_RUN_ID"],"workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',"verified_at":datetime.now(timezone.utc).isoformat()}
+          Path("docs/roadmap/five_axis/runtime_qa/s10/latest.json").write_text(json.dumps(e,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+          git add docs/roadmap/five_axis/runtime_qa/s10/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S10 RuntimeReloadQA ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s10-runtime-evidence
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
