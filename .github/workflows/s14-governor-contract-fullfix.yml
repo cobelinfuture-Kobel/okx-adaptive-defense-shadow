@@ -10,6 +10,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PYTHONPATH: .
     steps:
       - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
         with:
