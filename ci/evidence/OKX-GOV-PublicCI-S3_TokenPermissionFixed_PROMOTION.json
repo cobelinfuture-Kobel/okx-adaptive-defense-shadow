@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task_id": "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion",
+  "trigger_reason": "private promotion token permission fixed and read-only probe passed",
+  "probe_run_id": 29431612464,
+  "probe_result": "PASS",
+  "destination_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "destination_branch": "public-verified",
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "private_main_write_allowed": false
+  }
+}
