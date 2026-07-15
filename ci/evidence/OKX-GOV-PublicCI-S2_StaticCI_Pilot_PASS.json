@@ -1,0 +1,20 @@
+{
+  "schema_version": "okx_public_ci_evidence_v1",
+  "task_id": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
+  "status": "PASS",
+  "repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
+  "validated_head_commit": "f028ec21f23072565ce8fe240400f16c53480bc2",
+  "workflow_run_id": 29428280446,
+  "workflow_status": "completed",
+  "workflow_conclusion": "success",
+  "job_id": 87396310224,
+  "tracked_files_validated": 9,
+  "focused_tests_passed": 3,
+  "focused_tests_failed": 0,
+  "checkout_credentials_persisted": false,
+  "shadow_only": true,
+  "effective": false,
+  "execution_allowed": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "next_state": "AWAITING_PRIVATE_PROMOTION_BOOTSTRAP"
+}
