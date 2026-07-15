@@ -67,7 +67,9 @@ def validate_path(path: str) -> list[str]:
     lowered = normalized.lower()
     name = PurePosixPath(lowered).name
     errors: list[str] = []
-    if name in FORBIDDEN_NAMES or (name.startswith(".env.") and name != ".env.example"):
+    if name in FORBIDDEN_NAMES or (
+        name.startswith(".env.") and name != ".env.example"
+    ):
         errors.append(f"forbidden tracked file: {normalized}")
     if lowered.startswith(FORBIDDEN_PREFIXES):
         errors.append(f"forbidden tracked prefix: {normalized}")
@@ -109,11 +111,20 @@ def validate_queue() -> list[str]:
     missing = sorted(REQUIRED_FORBIDDEN_ACTIONS - actual)
     if missing:
         errors.append("missing forbidden actions: " + ", ".join(missing))
+
     automation = payload.get("automation", {})
-    if automation.get("public_to_private_push_allowed") is not False:
-        errors.append("public_to_private_push_allowed must be false")
-    if automation.get("private_pull_promotion_required") is not True:
-        errors.append("private_pull_promotion_required must be true")
+    required = {
+        "public_to_private_push_allowed": True,
+        "public_to_private_push_scope": "okx_bot_private/public-verified",
+        "public_to_private_push_event": "main_after_static_ci_pass",
+        "public_to_private_push_on_pull_request": False,
+        "private_main_direct_write_allowed": False,
+        "private_promotion_secret": "PRIVATE_PROMOTION_TOKEN",
+        "runtime_proof_claim_allowed": False,
+    }
+    for key, value in required.items():
+        if automation.get(key) != value:
+            errors.append(f"invalid bounded promotion contract: {key}")
     return errors
 
 
@@ -130,7 +141,7 @@ def main() -> int:
         return 1
     print(f"PASS: public boundary validated for {len(files)} tracked files")
     print("PASS: shadow_only=true effective=false execution_allowed=false")
-    print("PASS: public-to-private push disabled")
+    print("PASS: bounded promotion targets Private public-verified only")
     return 0
 
 
