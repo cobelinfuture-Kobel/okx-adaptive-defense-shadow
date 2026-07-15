@@ -28,6 +28,10 @@ effective = false
 execution_allowed = false
 ```
 
-GitHub Actions is the static verification authority. The private repository remains the promotion and runtime-evidence authority. Live runtime verification remains local.
+GitHub Actions is the static verification authority. After Public `main` passes
+CI, a narrowly scoped secret may write only the sanitized snapshot to the
+Private `public-verified` branch. Pull requests never receive promotion
+authority. The Private repository remains the runtime-evidence authority, and
+live runtime verification remains local.
 
 See [Public/Private Promotion Contract](docs/PUBLIC_PRIVATE_PROMOTION_CONTRACT.md) and [Security Policy](SECURITY.md).
