@@ -1,0 +1,118 @@
+name: OKX S15 Defensive Parameter Canary FullFix
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s15-defensive-canary-fullfix.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/s15-defensive-canary-fullfix
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - run: python3 -m pip install pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          target=Path("adaptive_defense/defensive_parameter_canary.py")
+          tree=ast.parse(target.read_text(encoding="utf-8"))
+          forbidden_imports={"okx","ccxt","requests","httpx","aiohttp","websocket"}
+          forbidden_calls={"place_order","cancel_order","amend_order","move_order","apply_parameter","execute","set_leverage"}
+          imports=set()
+          calls=set()
+          for node in ast.walk(tree):
+              if isinstance(node,ast.Import):
+                  imports.update(alias.name.split(".")[0] for alias in node.names)
+              elif isinstance(node,ast.ImportFrom) and node.module:
+                  imports.add(node.module.split(".")[0])
+              elif isinstance(node,ast.Call):
+                  if isinstance(node.func,ast.Name): calls.add(node.func.id)
+                  elif isinstance(node.func,ast.Attribute): calls.add(node.func.attr)
+          bad_imports=sorted(imports & forbidden_imports)
+          bad_calls=sorted(calls & forbidden_calls)
+          if bad_imports or bad_calls:
+              raise SystemExit(f"S15_EFFECTIVE_PATH_ISOLATION imports={bad_imports} calls={bad_calls}")
+          text=target.read_text(encoding="utf-8")
+          required=[
+            '"live_canary_activation_allowed": False',
+            '"authorization_granted": False',
+            '"execution_allowed": False',
+            '"network_access_allowed": False',
+            '"order_mutation_allowed": False',
+            '"SHADOW_CANARY_PLAN_VALIDATED"',
+            '"CANARY_DENIED_NOT_AUTHORIZED"',
+          ]
+          missing=[value for value in required if value not in text]
+          if missing: raise SystemExit(f"S15_DENY_DEFAULT_MISSING:{missing}")
+          PY
+          pytest -q \
+            tests/test_defensive_parameter_canary.py \
+            tests/test_effective_governor_action_contract.py \
+            tests/test_system_assisted_simulation.py \
+            tests/test_full_chain_shadow_readback.py
+          test -z "$(git status --porcelain)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/five_axis/fullfix/s15
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          passed=os.environ["QA_OUTCOME"]=="success"
+          result="PASS" if passed else "FAIL"
+          evidence={
+            "schema_version":"five_axis_fullfix_evidence_v1",
+            "task_id":"FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_FullFix",
+            "status":result,
+            "private_head_commit":os.environ["PRIVATE_HEAD_COMMIT"],
+            "focused_tests_result":result,
+            "deterministic_tier_chain_result":result,
+            "bounds_and_abort_rules_result":result,
+            "deny_by_default_result":result,
+            "effective_path_isolation_result":result,
+            "forbidden_dependency_scan_result":result,
+            "audit_readback_result":result,
+            "authorization_granted":False,
+            "shadow_only":True,
+            "effective":False,
+            "execution_allowed":False,
+            "effective_activation_allowed":False,
+            "live_canary_activation_allowed":False,
+            "okx_api_accessed":False,
+            "orders_modified":False,
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+            "verified_at":datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/fullfix/s15/latest.json").write_text(
+              json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+          git add docs/roadmap/five_axis/fullfix/s15/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S15 Defensive Canary FullFix ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s15-defensive-canary-fullfix
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
