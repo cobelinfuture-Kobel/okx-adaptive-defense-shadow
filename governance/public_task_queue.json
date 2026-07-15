@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_FullFix",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_RuntimeReloadQA",
+  "current_task": "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_DesignScan",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_FullFix",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -17,7 +17,8 @@
     "FiveAxisAdaptiveMM-S7_PositionLegModelAndStorageIsolation_DesignScan_FullFix_RuntimeQA_PASS",
     "FiveAxisAdaptiveMM-S8_DirectionalSizingAuthority_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S9_OrderCountAuthorityAndRepairParity_DesignScan_FullFix_RuntimeReloadQA_PASS",
-    "FiveAxisAdaptiveMM-S10_ServiceFloorSignalReadiness_DesignScan_FullFix_RuntimeReloadQA_PASS"
+    "FiveAxisAdaptiveMM-S10_ServiceFloorSignalReadiness_DesignScan_FullFix_RuntimeReloadQA_PASS",
+    "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_DesignScan_FullFix_RuntimeReloadQA_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -67,11 +68,13 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_DesignScan",
+    "task_id": "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_RuntimeReloadQA",
     "status": "PASS",
-    "private_main_commit": "b355ab214223d643d6c898a2b20a3e6152f35a87",
-    "workflow_run_id": 29440069464,
-    "attempts": 1,
+    "private_main_commit": "54667b833cea921986eac3eda692190da4fa31ba",
+    "evidence_merge_commit": "712fe6ea4ddd695734f5e900c9098c2c6936edb3",
+    "workflow_run_id": 29444099379,
+    "fullfix_attempts": 1,
+    "runtime_attempts": 1,
     "failure_threshold_not_reached": true,
     "codex_pull_used": false
   }
