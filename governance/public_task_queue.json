@@ -1,0 +1,35 @@
+{
+  "schema_version": "okx_public_ci_orchestration_v1",
+  "authority_scope": "public_ci_orchestration_only",
+  "product_task_queue_authority": "private_repository",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
+  "current_task": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
+  "proposed_next_task": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
+  "automation": {
+    "github_actions_continuous": true,
+    "codex_mode": "event_driven",
+    "public_to_private_push_allowed": false,
+    "private_pull_promotion_required": true,
+    "runtime_proof_claim_allowed": false
+  },
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "runtime_access_allowed": false,
+    "okx_api_access_allowed": false
+  },
+  "forbidden_actions": [
+    "DecisionResolver Effective Path",
+    "Sizing Effective Path",
+    "Spacing Effective Path",
+    "Order Count Effective Path",
+    "Auto Reduce",
+    "Strategy Rotation",
+    "Active Pool Selection",
+    "Order Placement",
+    "Order Cancellation",
+    "Order Movement"
+  ]
+}
