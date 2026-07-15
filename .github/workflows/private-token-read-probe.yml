@@ -1,0 +1,45 @@
+name: OKX Private Token Read Probe
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/private-token-read-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Read-only Private checkout probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require promotion secret
+        env:
+          PRIVATE_PROMOTION_TOKEN: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+        run: |
+          if [ -z "${PRIVATE_PROMOTION_TOKEN}" ]; then
+            echo "PRIVATE_PROMOTION_TOKEN_MISSING"
+            exit 1
+          fi
+          echo "PASS: promotion secret is available to same-repository PR."
+
+      - name: Checkout Private main read-only
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private-probe
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Confirm isolated checkout
+        run: |
+          test -d private-probe/.git
+          test -f private-probe/AGENTS.md
+          echo "PASS: token can read okx_bot_private main."
+          echo "PASS: no credentials persisted and no write attempted."
