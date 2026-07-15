@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_FullFix",
+  "current_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_FullFix",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_RuntimeReloadQA",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -75,15 +75,15 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_RuntimeReloadQA",
+    "task_id": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan",
     "status": "PASS",
-    "private_main_commit": "08e072eaa20dfc82d5bc7ca3979f64881771162c",
-    "workflow_run_id": 29455179072,
+    "private_main_commit": "4f214457adc7cf10e102ec9b374a6f2a35578af3",
+    "workflow_run_id": 29455276657,
     "attempts": 1,
-    "fullfix_attempts": 3,
-    "failure_threshold_not_exceeded": true,
+    "failure_threshold_not_reached": true,
     "codex_pull_used": false,
     "authorization_granted": false,
-    "effective_activation_allowed": false
+    "effective_activation_allowed": false,
+    "live_canary_activation_allowed": false
   }
 }
