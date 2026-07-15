@@ -1,0 +1,74 @@
+name: OKX S13 Assisted Simulation DesignScan
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s13-assisted-simulation-designscan.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/s13-assisted-simulation-designscan
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          target=Path("docs/roadmap/five_axis/s13_system_assisted_simulation_designscan.md")
+          text=target.read_text(encoding="utf-8")
+          required=[
+            "DESIGN READY FOR FULLFIX",
+            "SYSTEM_ASSISTED_SIMULATION_PROOF_GAP",
+            "OFFLINE_FIXTURE_REPLAY_ONLY",
+            "effective_path_isolation_state = ISOLATED",
+            "deterministic_replay_state",
+            "non_compounding_state",
+            "input_terminal_digest",
+            "JSON case evidence, item CSV, summary CSV, deterministic replay, and consumer readback must agree",
+            "shadow_only=true","effective=false","execution_allowed=false",
+            "No OKX API access",
+          ]
+          missing=[v for v in required if v not in text]
+          if missing: raise SystemExit(f"S13_DESIGNSCAN_MISSING:{missing}")
+          changed=set(subprocess.check_output(["git","diff","--name-only","origin/main...HEAD"],text=True,encoding="utf-8").splitlines())
+          allowed={str(target),"docs/roadmap/five_axis/designscan/s13/latest.json"}
+          unexpected=sorted(changed-allowed)
+          if unexpected: raise SystemExit(f"S13_DESIGNSCAN_SCOPE_VIOLATION:{unexpected}")
+          PY
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/five_axis/designscan/s13
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          p=os.environ["QA_OUTCOME"]=="success"
+          e={"schema_version":"five_axis_designscan_evidence_v1","task_id":"FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan","status":"PASS" if p else "FAIL","private_head_commit":os.environ["PRIVATE_HEAD_COMMIT"],"contract_completeness_result":"PASS" if p else "FAIL","scope_boundary_result":"PASS" if p else "FAIL","shadow_only":True,"effective":False,"execution_allowed":False,"simulation_only":True,"okx_api_accessed":False,"orders_modified":False,"workflow_run_id":os.environ["GITHUB_RUN_ID"],"workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',"verified_at":datetime.now(timezone.utc).isoformat()}
+          Path("docs/roadmap/five_axis/designscan/s13/latest.json").write_text(json.dumps(e,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+          git add docs/roadmap/five_axis/designscan/s13/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S13 Assisted Simulation DesignScan ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s13-assisted-simulation-designscan
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
