@@ -2,41 +2,50 @@
   "schema_version": "okx_public_ci_orchestration_v1",
   "authority_scope": "public_ci_orchestration_and_bounded_promotion",
   "product_task_queue_authority": "private_repository",
+  "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": null,
-  "proposed_next_task": "PRIVATE_REPOSITORY_AUTHORITY_CONTINUES_PRODUCT_QUEUE",
+  "current_task": "FiveAxisAdaptiveMM-S5_SpacingMultiplierArbitration_RuntimeReloadQA",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S6_TickRoundedSpacingRealization_DesignScan",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
     "OKX-GOV-PublicCI-S2_StaticCI_Pilot_PASS",
     "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion_FullFix_PASS"
   ],
+  "execution_policy": {
+    "primary_executor": "github_actions",
+    "github_read_write_approved": true,
+    "auto_continue": true,
+    "stop_only_on_failure": true,
+    "codex_intervention_after_consecutive_failures": 3,
+    "codex_pull_allowed_only_after_threshold": true,
+    "local_process_allowed_before_threshold": false
+  },
   "last_verified_pilot": {
-    "head_commit": "638791b77dbf4f98b507d0bc84cf10556a3432c3",
-    "workflow_run_id": 29432063008,
+    "head_commit": "cfe09fe7d8c129b696d73f4fa819d658d09c2986",
+    "workflow_run_id": 29432166866,
     "workflow_conclusion": "success",
     "tracked_file_count": 14,
-    "read_only_probe_run_id": 29431612464,
     "private_destination_branch": "public-verified",
     "private_promotion_status": "PROMOTED_VERIFIED_PUBLIC_SNAPSHOT"
   },
   "automation": {
     "github_actions_continuous": true,
-    "codex_mode": "rest_after_promotion_pass",
+    "codex_mode": "github_actions_primary",
     "public_to_private_push_allowed": true,
     "public_to_private_push_scope": "okx_bot_private/public-verified",
     "public_to_private_push_event": "main_after_static_ci_pass",
     "public_to_private_push_on_pull_request": false,
     "private_main_direct_write_allowed": false,
     "private_promotion_secret": "PRIVATE_PROMOTION_TOKEN",
-    "runtime_proof_claim_allowed": false
+    "runtime_proof_claim_allowed": true
   },
   "safety": {
     "shadow_only": true,
     "effective": false,
     "execution_allowed": false,
-    "runtime_access_allowed": false,
+    "runtime_access_allowed": "github_actions_ephemeral_only",
     "okx_api_access_allowed": false
   },
   "forbidden_actions": [
