@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+Setting.txt
+Strategy.txt
+Setting.local.txt
+Strategy.local.txt
+
+# Runtime and account evidence
+logs/
+data/
+artifacts/
+runtime_response.json
+*.log
+*.log.*
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+
+# Credentials and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Temporary files
+.tmp*
+_test_bundle_tmp/
