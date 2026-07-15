@@ -45,6 +45,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Install pinned test runner
+        working-directory: private
+        run: python3 -m pip install --disable-pip-version-check pytest==8.4.1
+
       - name: Run S5 ephemeral runtime reload QA
         id: runtime_qa
         continue-on-error: true
@@ -87,6 +91,7 @@ jobs:
           BUILDER_VERSION_EXPECTED: S5.SpacingMultiplierArbitration.FullFix.v1
         run: |
           set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
           git fetch origin main
           if git ls-remote --exit-code --heads origin github-actions-task-evidence >/dev/null 2>&1; then
             git fetch origin github-actions-task-evidence
@@ -105,12 +110,22 @@ jobs:
           from pathlib import Path
 
           passed = os.environ["QA_OUTCOME"] == "success"
+          latest_path = Path("docs/roadmap/five_axis/runtime_qa/s5/latest.json")
+          prior_failure_count = 0
+          if latest_path.exists():
+              try:
+                  prior = json.loads(latest_path.read_text(encoding="utf-8"))
+                  if prior.get("status") == "FAIL":
+                      prior_failure_count = int(prior.get("consecutive_failure_count", 0))
+              except (OSError, ValueError, TypeError):
+                  prior_failure_count = 0
+          consecutive_failure_count = 0 if passed else prior_failure_count + 1
           evidence = {
               "schema_version": "five_axis_runtime_reload_qa_v1",
               "task_id": os.environ["TASK_ID"],
               "status": "PASS" if passed else "FAIL",
               "executor": "github_actions_ephemeral_runner",
-              "private_main_commit": os.environ["GITHUB_SHA"],
+              "private_main_commit": os.environ["PRIVATE_MAIN_COMMIT"],
               "required_ancestor_commit": os.environ["TARGET_COMMIT"],
               "builder_version_expected": os.environ["BUILDER_VERSION_EXPECTED"],
               "builder_version_result": "MATCH" if passed else "UNVERIFIED_OR_MISMATCH",
@@ -130,15 +145,13 @@ jobs:
                   f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
                   f'{os.environ["GITHUB_RUN_ID"]}'
               ),
-              "consecutive_failure_count": 0 if passed else int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "consecutive_failure_count": consecutive_failure_count,
               "verified_at": datetime.now(timezone.utc).isoformat(),
           }
           payload = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
           path = Path(os.environ["EVIDENCE_PATH"])
           path.write_text(payload, encoding="utf-8")
-          Path("docs/roadmap/five_axis/runtime_qa/s5/latest.json").write_text(
-              payload, encoding="utf-8"
-          )
+          latest_path.write_text(payload, encoding="utf-8")
           PY
 
           git add docs/roadmap/five_axis/runtime_qa/s5
