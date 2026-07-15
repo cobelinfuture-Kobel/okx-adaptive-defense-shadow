@@ -1,0 +1,112 @@
+name: OKX S15 Defensive Canary RuntimeReloadQA
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s15-defensive-canary-runtime.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - run: python3 -m pip install pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from adaptive_defense.defensive_parameter_canary import validate_defensive_parameter_canary
+          governor={"governor_contract_state":"SHADOW_CONTRACT_VALIDATED","authorization_granted":False,"effective_activation_allowed":False,"execution_allowed":False,"validation_result_digest":"s14","contract_id":"contract-1","inst_id":"BTC","requested_action_class":"DEFENSIVE_SPACING","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s14"}}
+          request={"schema_version":"DefensiveParameterCanary-S15.v1","canary_id":"runtime-canary","contract_id":"contract-1","requested_action_class":"DEFENSIVE_SPACING","inst_id":"BTC","s14_validation_digest":"s14","proposed_delta":0.05,"max_change":0.10,"tiers":["BASELINE","SHADOW_TIER_1","SHADOW_TIER_2","AUDIT_COMPLETE"],"sample_budget":2,"fixture_ids":["a","b"],"service_floor_min":0.9,"risk_score_max":0.2,"divergence_max":0.1,"issued_at_ms":1000,"expires_at_ms":3000,"nonce":"runtime-nonce","activation_requested":False,"effective_activation_allowed":False,"live_canary_activation_allowed":False}
+          rows=[{"fixture_id":"a","service_floor":0.95,"risk_score":0.1,"divergence":0.04},{"fixture_id":"b","service_floor":0.96,"risk_score":0.08,"divergence":0.03}]
+          result=validate_defensive_parameter_canary(request=request,governor_validation=governor,fixture_metrics=rows,now_ms=2000)
+          assert result["canary_state"]=="SHADOW_CANARY_PLAN_VALIDATED"
+          assert result["authorization_granted"] is False
+          assert result["live_canary_activation_allowed"] is False
+          assert result["execution_allowed"] is False
+          assert result["network_access_allowed"] is False
+          Path("/tmp/s15-first.json").write_text(json.dumps(result,sort_keys=True),encoding="utf-8")
+          PY
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from adaptive_defense.defensive_parameter_canary import validate_defensive_parameter_canary
+          governor={"governor_contract_state":"SHADOW_CONTRACT_VALIDATED","authorization_granted":False,"effective_activation_allowed":False,"execution_allowed":False,"validation_result_digest":"s14","contract_id":"contract-1","inst_id":"BTC","requested_action_class":"DEFENSIVE_SPACING","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s14"}}
+          request={"schema_version":"DefensiveParameterCanary-S15.v1","canary_id":"runtime-canary","contract_id":"contract-1","requested_action_class":"DEFENSIVE_SPACING","inst_id":"BTC","s14_validation_digest":"s14","proposed_delta":0.05,"max_change":0.10,"tiers":["BASELINE","SHADOW_TIER_1","SHADOW_TIER_2","AUDIT_COMPLETE"],"sample_budget":2,"fixture_ids":["a","b"],"service_floor_min":0.9,"risk_score_max":0.2,"divergence_max":0.1,"issued_at_ms":1000,"expires_at_ms":3000,"nonce":"runtime-nonce","activation_requested":False,"effective_activation_allowed":False,"live_canary_activation_allowed":False}
+          rows=[{"fixture_id":"a","service_floor":0.95,"risk_score":0.1,"divergence":0.04},{"fixture_id":"b","service_floor":0.96,"risk_score":0.08,"divergence":0.03}]
+          result=validate_defensive_parameter_canary(request=request,governor_validation=governor,fixture_metrics=rows,now_ms=2000)
+          first=json.loads(Path("/tmp/s15-first.json").read_text(encoding="utf-8"))
+          assert result["validation_result_digest"]==first["validation_result_digest"]
+          denied=dict(request,activation_requested=True)
+          denied_result=validate_defensive_parameter_canary(request=denied,governor_validation=governor,fixture_metrics=rows,now_ms=2000)
+          assert denied_result["canary_state"]=="CANARY_DENIED_NOT_AUTHORIZED"
+          assert denied_result["authorization_granted"] is False
+          abort_rows=[rows[0],dict(rows[1],service_floor=0.5)]
+          aborted=validate_defensive_parameter_canary(request=request,governor_validation=governor,fixture_metrics=abort_rows,now_ms=2000)
+          assert aborted["canary_state"]=="CANARY_ABORT_SERVICE_FLOOR"
+          assert aborted["orders_modified"] is False
+          PY
+          pytest -q tests/test_defensive_parameter_canary.py
+          test -z "$(git status --porcelain)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git checkout -B github-actions/s15-runtime-evidence
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s15
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          passed=os.environ["QA_OUTCOME"]=="success"
+          result="PASS" if passed else "FAIL"
+          evidence={
+            "schema_version":"five_axis_runtime_qa_evidence_v1",
+            "task_id":"FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_RuntimeReloadQA",
+            "status":result,
+            "private_main_commit":os.environ["PRIVATE_MAIN_COMMIT"],
+            "fresh_process_determinism_result":result,
+            "shadow_plan_validation_result":result,
+            "activation_request_denial_result":result,
+            "service_floor_abort_result":result,
+            "focused_tests_result":result,
+            "authorization_granted":False,
+            "shadow_only":True,
+            "effective":False,
+            "execution_allowed":False,
+            "effective_activation_allowed":False,
+            "live_canary_activation_allowed":False,
+            "network_accessed":False,
+            "okx_api_accessed":False,
+            "orders_modified":False,
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+            "verified_at":datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/runtime_qa/s15/latest.json").write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+          git add docs/roadmap/five_axis/runtime_qa/s15/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S15 RuntimeReloadQA ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s15-runtime-evidence
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
