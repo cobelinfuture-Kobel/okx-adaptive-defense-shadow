@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_FullFix",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_RuntimeReloadQA",
+  "current_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_FullFix",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -20,7 +20,8 @@
     "FiveAxisAdaptiveMM-S10_ServiceFloorSignalReadiness_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_DesignScan_FullFix_RuntimeReloadQA_PASS",
-    "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan_FullFix_RuntimeReloadQA_PASS"
+    "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan_FullFix_RuntimeReloadQA_PASS",
+    "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan_FullFix_RuntimeReloadQA_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -57,7 +58,9 @@
     "runtime_access_allowed": "github_actions_ephemeral_only",
     "okx_api_access_allowed": false,
     "effective_governor_contract_design_allowed": true,
-    "effective_activation_allowed": false
+    "effective_activation_allowed": false,
+    "defensive_parameter_canary_design_allowed": true,
+    "live_canary_activation_allowed": false
   },
   "forbidden_actions": [
     "DecisionResolver Effective Path",
@@ -72,13 +75,15 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan",
+    "task_id": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_RuntimeReloadQA",
     "status": "PASS",
-    "private_main_commit": "0a08ed54ed0a6258f5cfd6d10d36a16868bab8bd",
-    "workflow_run_id": 29451330829,
-    "attempts": 2,
-    "failure_threshold_not_reached": true,
+    "private_main_commit": "08e072eaa20dfc82d5bc7ca3979f64881771162c",
+    "workflow_run_id": 29455179072,
+    "attempts": 1,
+    "fullfix_attempts": 3,
+    "failure_threshold_not_exceeded": true,
     "codex_pull_used": false,
+    "authorization_granted": false,
     "effective_activation_allowed": false
   }
 }
