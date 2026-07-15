@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_FullFix",
+  "current_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_FullFix",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_RuntimeReloadQA",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -72,14 +72,13 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_RuntimeReloadQA",
+    "task_id": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan",
     "status": "PASS",
-    "private_main_commit": "0b1f4444407a7669fe74af34a18404783df10ef1",
-    "evidence_merge_commit": "d9f14166a4f23c7c855d009ea2acd7969e4a0f44",
-    "workflow_run_id": 29451197636,
-    "fullfix_attempts": 1,
-    "runtime_attempts": 1,
+    "private_main_commit": "0a08ed54ed0a6258f5cfd6d10d36a16868bab8bd",
+    "workflow_run_id": 29451330829,
+    "attempts": 2,
     "failure_threshold_not_reached": true,
-    "codex_pull_used": false
+    "codex_pull_used": false,
+    "effective_activation_allowed": false
   }
 }
