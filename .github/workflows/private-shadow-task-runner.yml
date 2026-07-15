@@ -1,0 +1,175 @@
+name: OKX Private Shadow Task Runner
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/private-shadow-task-runner.yml"
+      - "governance/public_task_queue.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: okx-private-shadow-task-runner
+  cancel-in-progress: false
+
+jobs:
+  s5-runtime-reload-qa:
+    name: S5 Spacing Arbitration RuntimeReloadQA
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Require scoped Private token
+        env:
+          PRIVATE_PROMOTION_TOKEN: \${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+        run: |
+          if [ -z "\${PRIVATE_PROMOTION_TOKEN}" ]; then
+            echo "PRIVATE_PROMOTION_TOKEN_MISSING"
+            exit 1
+          fi
+
+      - name: Checkout Private main
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: \${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Run S5 ephemeral runtime reload QA
+        id: runtime_qa
+        continue-on-error: true
+        working-directory: private
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_COMMIT="38bab9274fca47b1a18b0cf87f1a46ac71d92873"
+          git merge-base --is-ancestor "\${TARGET_COMMIT}" HEAD
+
+          python3 - <<'PY'
+          from adaptive_defense.five_axis_control_plan_shadow_builder import BUILDER_VERSION
+          expected = "S5.SpacingMultiplierArbitration.FullFix.v1"
+          if BUILDER_VERSION != expected:
+              raise SystemExit(
+                  f"BUILDER_VERSION_MISMATCH expected={expected} actual={BUILDER_VERSION}"
+              )
+          print("S5_RUNTIME_IMPORT_PASS")
+          print(f"builder_version={BUILDER_VERSION}")
+          PY
+
+          python3 -m pytest -q \
+            tests/test_spacing_multiplier_arbitration.py \
+            tests/test_five_axis_control_plan_shadow_builder.py
+
+          git diff --exit-code
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            echo "TRACKED_WORKTREE_CHANGED"
+            exit 1
+          fi
+
+      - name: Write isolated Private QA evidence
+        if: always()
+        working-directory: private
+        shell: bash
+        env:
+          QA_OUTCOME: \${{ steps.runtime_qa.outcome }}
+          TASK_ID: FiveAxisAdaptiveMM-S5_SpacingMultiplierArbitration_RuntimeReloadQA
+          TARGET_COMMIT: 38bab9274fca47b1a18b0cf87f1a46ac71d92873
+          BUILDER_VERSION_EXPECTED: S5.SpacingMultiplierArbitration.FullFix.v1
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin github-actions-task-evidence >/dev/null 2>&1; then
+            git fetch origin github-actions-task-evidence
+            git switch -C github-actions-task-evidence origin/github-actions-task-evidence
+            git merge --no-edit origin/main
+          else
+            git switch -c github-actions-task-evidence origin/main
+          fi
+
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s5
+          export EVIDENCE_PATH="docs/roadmap/five_axis/runtime_qa/s5/run-\${GITHUB_RUN_ID}-attempt-\${GITHUB_RUN_ATTEMPT}.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          passed = os.environ["QA_OUTCOME"] == "success"
+          evidence = {
+              "schema_version": "five_axis_runtime_reload_qa_v1",
+              "task_id": os.environ["TASK_ID"],
+              "status": "PASS" if passed else "FAIL",
+              "executor": "github_actions_ephemeral_runner",
+              "private_main_commit": os.environ["GITHUB_SHA"],
+              "required_ancestor_commit": os.environ["TARGET_COMMIT"],
+              "builder_version_expected": os.environ["BUILDER_VERSION_EXPECTED"],
+              "builder_version_result": "MATCH" if passed else "UNVERIFIED_OR_MISMATCH",
+              "arbitration_mode_expected": "MAX_DEFENSIVE_NON_COMPOUNDING",
+              "focused_tests_result": "PASS" if passed else "FAIL",
+              "json_csv_summary_consistency": "PASS" if passed else "FAIL",
+              "protected_runtime_inputs_changed": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "workflow_run_url": (
+                  f'{os.environ["GITHUB_SERVER_URL"]}/'
+                  f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
+                  f'{os.environ["GITHUB_RUN_ID"]}'
+              ),
+              "consecutive_failure_count": 0 if passed else int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "verified_at": datetime.now(timezone.utc).isoformat(),
+          }
+          payload = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
+          path = Path(os.environ["EVIDENCE_PATH"])
+          path.write_text(payload, encoding="utf-8")
+          Path("docs/roadmap/five_axis/runtime_qa/s5/latest.json").write_text(
+              payload, encoding="utf-8"
+          )
+          PY
+
+          git add docs/roadmap/five_axis/runtime_qa/s5
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --cached --quiet; then
+            git commit -m "qa: record S5 RuntimeReloadQA run \${GITHUB_RUN_ID} attempt \${GITHUB_RUN_ATTEMPT}"
+            git push origin HEAD:github-actions-task-evidence
+          fi
+
+      - name: Enforce QA result
+        if: steps.runtime_qa.outcome != 'success'
+        run: |
+          echo "S5_RUNTIME_RELOAD_QA_FAILED"
+          exit 1
+
+      - name: Write summary
+        if: always()
+        shell: bash
+        env:
+          QA_OUTCOME: \${{ steps.runtime_qa.outcome }}
+        run: |
+          {
+            echo "## S5 Spacing Multiplier Arbitration RuntimeReloadQA"
+            echo
+            echo "- outcome: \${QA_OUTCOME}"
+            echo "- executor: GitHub Actions ephemeral runner"
+            echo "- target commit present: 38bab927"
+            echo "- builder: S5.SpacingMultiplierArbitration.FullFix.v1"
+            echo "- shadow_only: true"
+            echo "- effective: false"
+            echo "- execution_allowed: false"
+            echo "- OKX API accessed: false"
+          } >> "\${GITHUB_STEP_SUMMARY}"
