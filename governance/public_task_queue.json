@@ -4,11 +4,24 @@
   "product_task_queue_authority": "private_repository",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
-  "proposed_next_task": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
+  "current_task": "AWAITING_PRIVATE_PROMOTION_BOOTSTRAP",
+  "proposed_next_task": "AWAITING_PRIVATE_PROMOTION_BOOTSTRAP",
+  "completed_tasks": [
+    "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
+    "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
+    "OKX-GOV-PublicCI-S2_StaticCI_Pilot_PASS"
+  ],
+  "last_verified_pilot": {
+    "head_commit": "f028ec21f23072565ce8fe240400f16c53480bc2",
+    "workflow_run_id": 29428280446,
+    "workflow_conclusion": "success",
+    "tracked_file_count": 9,
+    "focused_tests_passed": 3,
+    "focused_tests_failed": 0
+  },
   "automation": {
     "github_actions_continuous": true,
-    "codex_mode": "event_driven",
+    "codex_mode": "sleep_until_event",
     "public_to_private_push_allowed": false,
     "private_pull_promotion_required": true,
     "runtime_proof_claim_allowed": false

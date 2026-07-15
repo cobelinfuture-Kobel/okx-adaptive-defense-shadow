@@ -1,0 +1,10 @@
+{
+  "schema_version": "okx_public_ci_static_pilot_v1",
+  "task_id": "OKX-GOV-PublicCI-S2_StaticCI_Pilot",
+  "source_commit": "338c31d9cff15a7b9c50e26ab10c0b91cad59aeb",
+  "scope": "public_static_ci_only",
+  "runtime_proof": "NOT_CLAIMED",
+  "shadow_only": true,
+  "effective": false,
+  "execution_allowed": false
+}
