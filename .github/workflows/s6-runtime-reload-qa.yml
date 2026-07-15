@@ -1,0 +1,151 @@
+name: OKX S6 RuntimeReloadQA
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/s6-runtime-reload-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: okx-s6-runtime-reload-qa
+  cancel-in-progress: false
+
+jobs:
+  runtime-reload-qa:
+    name: S6 Tick-Rounded RuntimeReloadQA
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout merged Private main
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install pinned test runner
+        working-directory: private
+        run: python3 -m pip install --disable-pip-version-check pytest==8.4.1
+
+      - name: Run S6 fresh-process runtime readback
+        id: runtime
+        continue-on-error: true
+        working-directory: private
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from adaptive_defense.five_axis_control_plan_shadow_builder import BUILDER_VERSION
+          from adaptive_defense.tick_rounded_spacing_realization import (
+              TICK_ROUNDED_SPACING_REALIZATION_SCHEMA_VERSION,
+              realize_tick_rounded_spacing,
+          )
+
+          assert BUILDER_VERSION == "S6.TickRoundedSpacingRealization.FullFix.v1"
+          assert TICK_ROUNDED_SPACING_REALIZATION_SCHEMA_VERSION == (
+              "TickRoundedSpacingRealization-S6.v1"
+          )
+          result = realize_tick_rounded_spacing(
+              inst_id="RUNTIME-PROBE",
+              candidate_spacing_ratio="0.0375",
+              candidate_spacing_bps="375",
+              tick_size="0.1",
+              market_price="100",
+              bid="99.9",
+              ask="100.1",
+          )
+          assert result["realization_state"] == "READY"
+          assert result["tick_rounded_buy_price"] == 96.2
+          assert result["tick_rounded_sell_price"] == 103.8
+          assert result["rounding_never_narrows"] is True
+          assert result["shadow_only"] is True
+          assert result["effective"] is False
+          assert result["execution_allowed"] is False
+          print("S6_RUNTIME_RELOAD_IMPORT_PASS")
+          PY
+          python3 -m pytest -q \
+            tests/test_spacing_unit_normalization.py \
+            tests/test_spacing_multiplier_arbitration.py \
+            tests/test_tick_rounded_spacing_realization.py \
+            tests/test_five_axis_control_plan_shadow_builder.py
+          git diff --exit-code
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            echo "S6_RUNTIME_TRACKED_WORKTREE_CHANGED"
+            exit 1
+          fi
+
+      - name: Write isolated RuntimeReloadQA evidence
+        if: always()
+        working-directory: private
+        shell: bash
+        env:
+          QA_OUTCOME: ${{ steps.runtime.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin github-actions/s6-runtime-evidence >/dev/null 2>&1; then
+            git fetch origin github-actions/s6-runtime-evidence
+            git switch -C github-actions/s6-runtime-evidence origin/github-actions/s6-runtime-evidence
+            git merge --no-edit origin/main
+          else
+            git switch -c github-actions/s6-runtime-evidence origin/main
+          fi
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s6
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          passed = os.environ["QA_OUTCOME"] == "success"
+          evidence = {
+              "schema_version": "five_axis_runtime_reload_qa_v1",
+              "task_id": "FiveAxisAdaptiveMM-S6_TickRoundedSpacingRealization_RuntimeReloadQA",
+              "status": "PASS" if passed else "FAIL",
+              "executor": "github_actions_ephemeral_runner",
+              "private_main_commit": os.environ["PRIVATE_MAIN_COMMIT"],
+              "builder_version_expected": "S6.TickRoundedSpacingRealization.FullFix.v1",
+              "builder_version_result": "MATCH" if passed else "UNVERIFIED_OR_MISMATCH",
+              "focused_tests_result": "PASS" if passed else "FAIL",
+              "json_csv_summary_consistency": "PASS" if passed else "FAIL",
+              "outward_rounding_runtime_probe": "PASS" if passed else "FAIL",
+              "protected_runtime_inputs_changed": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_run_url": (
+                  f'{os.environ["GITHUB_SERVER_URL"]}/'
+                  f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
+                  f'{os.environ["GITHUB_RUN_ID"]}'
+              ),
+              "verified_at": datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/runtime_qa/s6/latest.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          git add docs/roadmap/five_axis/runtime_qa/s6/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --cached --quiet; then
+            git commit -m "qa: record S6 RuntimeReloadQA ${GITHUB_RUN_ID}"
+            git push origin HEAD:github-actions/s6-runtime-evidence
+          fi
+
+      - name: Enforce RuntimeReloadQA result
+        if: steps.runtime.outcome != 'success'
+        run: exit 1
