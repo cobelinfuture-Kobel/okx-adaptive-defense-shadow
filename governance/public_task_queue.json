@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_FullFix",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_RuntimeReloadQA",
+  "current_task": "AWAITING_OPERATOR_EFFECTIVE_AUTHORIZATION",
+  "proposed_next_task": "DefensiveEffective-S0_LimitedIntegration",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -21,7 +21,8 @@
     "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan_FullFix_RuntimeReloadQA_PASS",
-    "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan_FullFix_RuntimeReloadQA_PASS"
+    "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan_FullFix_RuntimeReloadQA_PASS",
+    "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan_FullFix_RuntimeReloadQA_PASS_SHADOW_CONTRACT_ONLY"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -75,15 +76,27 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan",
-    "status": "PASS",
-    "private_main_commit": "4f214457adc7cf10e102ec9b374a6f2a35578af3",
-    "workflow_run_id": 29455276657,
+    "task_id": "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_RuntimeReloadQA",
+    "status": "PASS_SHADOW_CONTRACT_ONLY",
+    "private_main_commit": "eb724cc803c26cca3adffbc82656d92e5e5ba207",
+    "workflow_run_id": 29455514535,
     "attempts": 1,
     "failure_threshold_not_reached": true,
     "codex_pull_used": false,
     "authorization_granted": false,
     "effective_activation_allowed": false,
     "live_canary_activation_allowed": false
+  },
+  "blocking_state": {
+    "status": "BLOCKED_BY_AUTHORITY",
+    "task_id": "DefensiveEffective-S0_LimitedIntegration",
+    "reason": "Requires explicit human approval for a bounded one-shot Effective apply; current governance explicitly forbids Effective activation.",
+    "required_authority_change": [
+      "explicit operator approval for the exact Effective action contract",
+      "bounded symbol/action/duration scope",
+      "rollback and automatic relock authorization",
+      "effective_activation_allowed=true only for the approved one-shot window"
+    ],
+    "safe_default": "Remain Shadow-only; no action executed."
   }
 }
