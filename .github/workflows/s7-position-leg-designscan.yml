@@ -1,0 +1,112 @@
+name: OKX S7 Position Leg DesignScan
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/s7-position-leg-designscan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: S7 Position Leg and Storage DesignScan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Private S7 DesignScan
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/s7-position-leg-designscan
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Validate bounded S7 design
+        id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          target = Path("docs/roadmap/five_axis/s7_position_leg_model_storage_isolation_designscan.md")
+          text = target.read_text(encoding="utf-8")
+          required = [
+              "DESIGN READY FOR FULLFIX",
+              "LONG_SHORT_POSITION_LEG_MODEL_NOT_IMPLEMENTED",
+              "LONG_SHORT_POSITION_STORAGE_COLLISION_RISK",
+              "position_key = inst_id | position_mode | position_leg",
+              "net_by_inst",
+              "long_by_inst",
+              "short_by_inst",
+              "CROSS_LEG_CREATION_BLOCKED",
+              "JSON, item CSV, and summary CSV must agree",
+              "shadow_only=true",
+              "effective=false",
+              "execution_allowed=false",
+          ]
+          missing = [value for value in required if value not in text]
+          if missing:
+              raise SystemExit(f"S7_DESIGNSCAN_MISSING:{missing}")
+          changed = set(subprocess.check_output(
+              ["git", "diff", "--name-only", "origin/main...HEAD"],
+              text=True, encoding="utf-8",
+          ).splitlines())
+          allowed = {
+              str(target),
+              "docs/roadmap/five_axis/designscan/s7/latest.json",
+          }
+          unexpected = sorted(changed - allowed)
+          if unexpected:
+              raise SystemExit(f"S7_DESIGNSCAN_SCOPE_VIOLATION:{unexpected}")
+          print("S7_DESIGNSCAN_PASS")
+          PY
+      - name: Write evidence
+        if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/five_axis/designscan/s7
+          python3 - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          passed = os.environ["QA_OUTCOME"] == "success"
+          evidence = {
+              "schema_version": "five_axis_designscan_evidence_v1",
+              "task_id": "FiveAxisAdaptiveMM-S7_PositionLegModelAndStorageIsolation_DesignScan",
+              "status": "PASS" if passed else "FAIL",
+              "private_head_commit": os.environ["PRIVATE_HEAD_COMMIT"],
+              "scope_boundary_result": "PASS" if passed else "FAIL",
+              "contract_completeness_result": "PASS" if passed else "FAIL",
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_run_url": f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+              "verified_at": datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/designscan/s7/latest.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          PY
+          git add docs/roadmap/five_axis/designscan/s7/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S7 Position Leg DesignScan ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s7-position-leg-designscan
+      - name: Enforce result
+        if: steps.qa.outcome != 'success'
+        run: exit 1
