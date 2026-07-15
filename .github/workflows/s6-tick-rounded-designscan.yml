@@ -1,0 +1,136 @@
+name: OKX S6 Tick-Rounded DesignScan
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/s6-tick-rounded-designscan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: okx-s6-tick-rounded-designscan
+  cancel-in-progress: false
+
+jobs:
+  validate-designscan:
+    name: S6 Tick-Rounded Spacing DesignScan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Private S6 DesignScan branch
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/s6-tick-rounded-designscan
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Validate bounded S6 design
+        id: designscan
+        continue-on-error: true
+        working-directory: private
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          target = Path("docs/roadmap/five_axis/s6_tick_rounded_spacing_realization_designscan.md")
+          if not target.exists():
+              raise SystemExit("S6_DESIGNSCAN_MISSING")
+          text = target.read_text(encoding="utf-8")
+          required = [
+              "DESIGN READY FOR FULLFIX",
+              "MAX_DEFENSIVE_NON_COMPOUNDING",
+              "floor(theoretical_buy_price / t)",
+              "ceil(theoretical_sell_price / t)",
+              "SPACING_TICK_ROUNDED_REALIZATION_NOT_REPORTED",
+              "shadow_only=true",
+              "effective=false",
+              "execution_allowed=false",
+              "must not call the OKX API",
+              "JSON, CSV, and summary counters must agree",
+          ]
+          missing = [value for value in required if value not in text]
+          if missing:
+              raise SystemExit(f"S6_DESIGNSCAN_REQUIRED_CONTRACT_MISSING:{missing}")
+
+          changed = subprocess.check_output(
+              ["git", "diff", "--name-only", "origin/main...HEAD"],
+              text=True,
+              encoding="utf-8",
+          ).splitlines()
+          allowed = {
+              str(target),
+              "docs/roadmap/five_axis/designscan/s6/latest.json",
+          }
+          unexpected = sorted(path for path in changed if path not in allowed)
+          if unexpected:
+              raise SystemExit(f"S6_DESIGNSCAN_SCOPE_VIOLATION:{unexpected}")
+          print("S6_DESIGNSCAN_PASS")
+          PY
+
+      - name: Write DesignScan evidence to Private branch
+        if: always()
+        working-directory: private
+        shell: bash
+        env:
+          QA_OUTCOME: ${{ steps.designscan.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/five_axis/designscan/s6
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          passed = os.environ["QA_OUTCOME"] == "success"
+          evidence = {
+              "schema_version": "five_axis_designscan_evidence_v1",
+              "task_id": "FiveAxisAdaptiveMM-S6_TickRoundedSpacingRealization_DesignScan",
+              "status": "PASS" if passed else "FAIL",
+              "executor": "github_actions",
+              "private_branch": "github-actions/s6-tick-rounded-designscan",
+              "private_head_commit": os.environ["PRIVATE_HEAD_COMMIT"],
+              "scope_boundary_result": "PASS" if passed else "FAIL",
+              "contract_completeness_result": "PASS" if passed else "FAIL",
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_run_url": (
+                  f'{os.environ["GITHUB_SERVER_URL"]}/'
+                  f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
+                  f'{os.environ["GITHUB_RUN_ID"]}'
+              ),
+              "verified_at": datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/designscan/s6/latest.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          git add docs/roadmap/five_axis/designscan/s6/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --cached --quiet; then
+            git commit -m "qa: record S6 Tick-Rounded DesignScan ${GITHUB_RUN_ID}"
+            git push origin HEAD:github-actions/s6-tick-rounded-designscan
+          fi
+
+      - name: Enforce DesignScan result
+        if: steps.designscan.outcome != 'success'
+        run: exit 1
