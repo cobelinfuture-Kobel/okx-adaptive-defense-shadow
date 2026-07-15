@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_FullFix",
-  "proposed_next_task": "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_RuntimeReloadQA",
+  "current_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan",
+  "proposed_next_task": "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_FullFix",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -19,7 +19,8 @@
     "FiveAxisAdaptiveMM-S9_OrderCountAuthorityAndRepairParity_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S10_ServiceFloorSignalReadiness_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S11_CrossAxisAuthorityConsolidation_DesignScan_FullFix_RuntimeReloadQA_PASS",
-    "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_DesignScan_FullFix_RuntimeReloadQA_PASS"
+    "FiveAxisAdaptiveMM-S12_FullChainShadowReadback_DesignScan_FullFix_RuntimeReloadQA_PASS",
+    "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan_FullFix_RuntimeReloadQA_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -54,7 +55,9 @@
     "effective": false,
     "execution_allowed": false,
     "runtime_access_allowed": "github_actions_ephemeral_only",
-    "okx_api_access_allowed": false
+    "okx_api_access_allowed": false,
+    "effective_governor_contract_design_allowed": true,
+    "effective_activation_allowed": false
   },
   "forbidden_actions": [
     "DecisionResolver Effective Path",
@@ -69,11 +72,13 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan",
+    "task_id": "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_RuntimeReloadQA",
     "status": "PASS",
-    "private_main_commit": "b80b2376022a2abd5f0da0664e4677eab5206da9",
-    "workflow_run_id": 29447640637,
-    "attempts": 1,
+    "private_main_commit": "0b1f4444407a7669fe74af34a18404783df10ef1",
+    "evidence_merge_commit": "d9f14166a4f23c7c855d009ea2acd7969e4a0f44",
+    "workflow_run_id": 29451197636,
+    "fullfix_attempts": 1,
+    "runtime_attempts": 1,
     "failure_threshold_not_reached": true,
     "codex_pull_used": false
   }
