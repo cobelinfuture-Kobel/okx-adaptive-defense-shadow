@@ -1,0 +1,138 @@
+name: OKX S14 Governor Contract RuntimeReloadQA
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s14-governor-contract-runtime.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install test dependency
+        run: python3 -m pip install pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from adaptive_defense.effective_governor_action_contract import validate_governor_action_contract
+          chain={
+            "inst_id":"BTC",
+            "full_chain_shadow_readback_state":"READY",
+            "full_chain_terminal_digest":"s12",
+            "consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s12"},
+            "shadow_only":True,"effective":False,"execution_allowed":False,
+          }
+          simulation={
+            "assisted_simulation_state":"READY",
+            "simulation_result_digest":"s13",
+            "deterministic_replay_state":"MATCH",
+            "bounded_parameter_state":"PASS",
+            "effective_path_isolation_state":"ISOLATED",
+            "consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s13"},
+            "shadow_only":True,"effective":False,"execution_allowed":False,
+          }
+          base={
+            "schema_version":"EffectiveGovernorActionContract-S14.v1",
+            "contract_id":"runtime-contract-1",
+            "requested_action_class":"DEFENSIVE_SPACING",
+            "inst_id":"BTC",
+            "s12_terminal_digest":"s12",
+            "s13_result_digest":"s13",
+            "operator_approval_id":"runtime-approval-ref",
+            "approver_identity_ref":"runtime-operator-ref",
+            "issued_at_ms":1000,
+            "expires_at_ms":3000,
+            "nonce":"runtime-nonce-1",
+            "safety_interlock_digest":"runtime-interlock",
+            "max_change":0.1,
+            "canary_tier":"CONTRACT_ONLY",
+            "activation_requested":False,
+            "effective_activation_allowed":False,
+          }
+          validated=validate_governor_action_contract(
+            contract=base,full_chain_readback=chain,assisted_simulation=simulation,now_ms=2000
+          )
+          assert validated["governor_contract_state"]=="SHADOW_CONTRACT_VALIDATED"
+          assert validated["authorization_granted"] is False
+          assert validated["effective_activation_allowed"] is False
+          assert validated["execution_allowed"] is False
+          assert validated["network_access_allowed"] is False
+          assert validated["order_mutation_allowed"] is False
+          PY
+          python3 - <<'PY'
+          from adaptive_defense.effective_governor_action_contract import validate_governor_action_contract
+          chain={"inst_id":"BTC","full_chain_shadow_readback_state":"READY","full_chain_terminal_digest":"s12","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s12"},"shadow_only":True,"effective":False,"execution_allowed":False}
+          simulation={"assisted_simulation_state":"READY","simulation_result_digest":"s13","deterministic_replay_state":"MATCH","bounded_parameter_state":"PASS","effective_path_isolation_state":"ISOLATED","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"s13"},"shadow_only":True,"effective":False,"execution_allowed":False}
+          contract={"schema_version":"EffectiveGovernorActionContract-S14.v1","contract_id":"runtime-denied-1","requested_action_class":"DEFENSIVE_SPACING","inst_id":"BTC","s12_terminal_digest":"s12","s13_result_digest":"s13","operator_approval_id":"runtime-approval-ref","approver_identity_ref":"runtime-operator-ref","issued_at_ms":1000,"expires_at_ms":3000,"nonce":"runtime-nonce-2","safety_interlock_digest":"runtime-interlock","max_change":0.1,"canary_tier":"CONTRACT_ONLY","activation_requested":True,"effective_activation_allowed":False}
+          denied=validate_governor_action_contract(contract=contract,full_chain_readback=chain,assisted_simulation=simulation,now_ms=2000)
+          assert denied["governor_contract_state"]=="DENIED_NOT_AUTHORIZED"
+          assert denied["authorization_granted"] is False
+          assert denied["effective_activation_allowed"] is False
+          assert denied["execution_allowed"] is False
+          assert denied["okx_api_accessed"] is False
+          assert denied["orders_modified"] is False
+          PY
+          pytest -q tests/test_effective_governor_action_contract.py
+          test -z "$(git status --porcelain)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git checkout -B github-actions/s14-runtime-evidence
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s14
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          passed=os.environ["QA_OUTCOME"]=="success"
+          result="PASS" if passed else "FAIL"
+          evidence={
+            "schema_version":"five_axis_runtime_qa_evidence_v1",
+            "task_id":"FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_RuntimeReloadQA",
+            "status":result,
+            "private_main_commit":os.environ["PRIVATE_MAIN_COMMIT"],
+            "fresh_process_readback_result":result,
+            "shadow_contract_validation_result":result,
+            "activation_request_denial_result":result,
+            "focused_tests_result":result,
+            "authorization_granted":False,
+            "shadow_only":True,
+            "effective":False,
+            "execution_allowed":False,
+            "effective_activation_allowed":False,
+            "network_accessed":False,
+            "okx_api_accessed":False,
+            "orders_modified":False,
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+            "verified_at":datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/runtime_qa/s14/latest.json").write_text(
+              json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+          git add docs/roadmap/five_axis/runtime_qa/s14/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S14 RuntimeReloadQA ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s14-runtime-evidence
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
