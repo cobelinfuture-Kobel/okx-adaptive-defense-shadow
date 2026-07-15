@@ -24,7 +24,9 @@ jobs:
 
     steps:
       - name: Checkout verified source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          persist-credentials: false
 
       - name: Validate public boundary
         run: python3 tools/ci/validate_public_boundary.py
