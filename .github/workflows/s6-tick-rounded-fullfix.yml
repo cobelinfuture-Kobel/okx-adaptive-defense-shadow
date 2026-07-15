@@ -1,0 +1,133 @@
+name: OKX S6 Tick-Rounded FullFix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/s6-tick-rounded-fullfix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: okx-s6-tick-rounded-fullfix
+  cancel-in-progress: false
+
+jobs:
+  validate-fullfix:
+    name: S6 Tick-Rounded Spacing FullFix
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Private S6 FullFix branch
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/s6-tick-rounded-fullfix
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install pinned test runner
+        working-directory: private
+        run: python3 -m pip install --disable-pip-version-check pytest==8.4.1
+
+      - name: Validate S6 bounded FullFix
+        id: fullfix
+        continue-on-error: true
+        working-directory: private
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          import subprocess
+
+          changed = set(subprocess.check_output(
+              ["git", "diff", "--name-only", "origin/main...HEAD"],
+              text=True,
+              encoding="utf-8",
+          ).splitlines())
+          allowed = {
+              "adaptive_defense/tick_rounded_spacing_realization.py",
+              "adaptive_defense/five_axis_control_plan_shadow_builder/__init__.py",
+              "tests/test_tick_rounded_spacing_realization.py",
+              "tests/test_five_axis_control_plan_shadow_builder.py",
+              "docs/roadmap/five_axis/fullfix/s6/latest.json",
+          }
+          unexpected = sorted(changed - allowed)
+          if unexpected:
+              raise SystemExit(f"S6_FULLFIX_SCOPE_VIOLATION:{unexpected}")
+          PY
+          python3 -m pytest -q \
+            tests/test_spacing_unit_normalization.py \
+            tests/test_spacing_multiplier_arbitration.py \
+            tests/test_tick_rounded_spacing_realization.py \
+            tests/test_five_axis_control_plan_shadow_builder.py
+          git diff --exit-code
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            echo "S6_FULLFIX_TRACKED_WORKTREE_CHANGED"
+            exit 1
+          fi
+
+      - name: Write FullFix evidence to Private branch
+        if: always()
+        working-directory: private
+        shell: bash
+        env:
+          QA_OUTCOME: ${{ steps.fullfix.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/five_axis/fullfix/s6
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          passed = os.environ["QA_OUTCOME"] == "success"
+          evidence = {
+              "schema_version": "five_axis_fullfix_evidence_v1",
+              "task_id": "FiveAxisAdaptiveMM-S6_TickRoundedSpacingRealization_FullFix",
+              "status": "PASS" if passed else "FAIL",
+              "executor": "github_actions",
+              "private_branch": "github-actions/s6-tick-rounded-fullfix",
+              "private_head_commit": os.environ["PRIVATE_HEAD_COMMIT"],
+              "focused_tests_result": "PASS" if passed else "FAIL",
+              "json_csv_summary_consistency": "PASS" if passed else "FAIL",
+              "scope_boundary_result": "PASS" if passed else "FAIL",
+              "builder_version_expected": "S6.TickRoundedSpacingRealization.FullFix.v1",
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_run_url": (
+                  f'{os.environ["GITHUB_SERVER_URL"]}/'
+                  f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
+                  f'{os.environ["GITHUB_RUN_ID"]}'
+              ),
+              "verified_at": datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/five_axis/fullfix/s6/latest.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          git add docs/roadmap/five_axis/fullfix/s6/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --cached --quiet; then
+            git commit -m "qa: record S6 Tick-Rounded FullFix ${GITHUB_RUN_ID}"
+            git push origin HEAD:github-actions/s6-tick-rounded-fullfix
+          fi
+
+      - name: Enforce FullFix result
+        if: steps.fullfix.outcome != 'success'
+        run: exit 1
