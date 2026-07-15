@@ -5,19 +5,21 @@
 ```text
 Public development repository
   -> Public static CI
-  -> verified commit metadata
-  -> Private repository pulls and validates
-  -> private public-verified branch
-  -> private main
+  -> successful main-branch promotion job
+  -> Private public-verified branch
+  -> operator or local promotion into Private main
   -> local runtime pulls Private
 ```
 
-The Public repository never receives a credential that can write to the Private repository. Promotion is pull-based from the trusted Private side.
+Private GitHub-hosted runners are not used. A fine-grained credential stored as
+the Public repository secret `PRIVATE_PROMOTION_TOKEN` may write only to
+`cobelinfuture-Kobel/okx_bot_private`. Promotion is restricted to the
+`public-verified` branch.
 
 ## Authority
 
-- Public repository: sanitized source development and static CI authority.
-- Private repository: promotion audit and runtime-evidence authority.
+- Public repository: sanitized source, static CI, and bounded promotion authority.
+- Private repository: verified snapshot retention and runtime-evidence authority.
 - Local runtime: live process, collector, exchange readback, and open-order evidence authority.
 
 Public CI cannot claim runtime proof.
@@ -26,17 +28,29 @@ Public CI cannot claim runtime proof.
 
 A Public commit is eligible only when:
 
-1. it belongs to protected `main`;
-2. required CI is completed successfully;
+1. it is the tested commit on Public `main`;
+2. required static CI completed successfully;
 3. test failure count is zero;
 4. public-boundary validation passes;
 5. safety invariants pass;
-6. the commit digest matches the promoted content;
-7. no forbidden path, credential, runtime artifact, or live evidence is present.
+6. promotion runs from `push` or an explicit `workflow_dispatch` on `main`;
+7. the destination is Private `public-verified`, never Private `main`;
+8. no forbidden path, credential, runtime artifact, or live evidence is present.
+
+Pull-request events must skip the promotion job. Fork pull requests do not
+receive promotion credentials. Workflow changes must pass the same static CI
+before merge.
+
+## Credential boundary
+
+`PRIVATE_PROMOTION_TOKEN` must be fine-grained, repository-scoped to
+`okx_bot_private`, and limited to repository contents. It must never appear in
+source, logs, artifacts, manifests, or copied snapshots.
 
 ## Codex sleep and wake contract
 
-GitHub Actions runs continuously for static verification. Codex is event-driven and is needed only for:
+GitHub Actions runs continuously for static verification and bounded promotion.
+Codex is event-driven and is needed only for:
 
 - a new code or documentation task;
 - CI or promotion failure requiring diagnosis or repair;
@@ -48,4 +62,6 @@ GitHub Actions does not design or implement future product milestones.
 
 ## Runtime boundary
 
-RuntimeReloadQA, live ObservationQA, process/PID evidence, collector evidence, live API readback, open-order proof, and Effective/Canary approval remain outside Public CI.
+RuntimeReloadQA, live ObservationQA, process/PID evidence, collector evidence,
+live API readback, open-order proof, and Effective/Canary approval remain
+outside Public CI.
