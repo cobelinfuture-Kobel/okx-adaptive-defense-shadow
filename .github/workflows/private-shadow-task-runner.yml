@@ -28,9 +28,9 @@ jobs:
     steps:
       - name: Require scoped Private token
         env:
-          PRIVATE_PROMOTION_TOKEN: \${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          PRIVATE_PROMOTION_TOKEN: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
         run: |
-          if [ -z "\${PRIVATE_PROMOTION_TOKEN}" ]; then
+          if [ -z "${PRIVATE_PROMOTION_TOKEN}" ]; then
             echo "PRIVATE_PROMOTION_TOKEN_MISSING"
             exit 1
           fi
@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
         with:
           repository: cobelinfuture-Kobel/okx_bot_private
-          token: \${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
           ref: main
           path: private
           fetch-depth: 0
@@ -53,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           TARGET_COMMIT="38bab9274fca47b1a18b0cf87f1a46ac71d92873"
-          git merge-base --is-ancestor "\${TARGET_COMMIT}" HEAD
+          git merge-base --is-ancestor "${TARGET_COMMIT}" HEAD
 
           python3 - <<'PY'
           from adaptive_defense.five_axis_control_plan_shadow_builder import BUILDER_VERSION
@@ -81,7 +81,7 @@ jobs:
         working-directory: private
         shell: bash
         env:
-          QA_OUTCOME: \${{ steps.runtime_qa.outcome }}
+          QA_OUTCOME: ${{ steps.runtime_qa.outcome }}
           TASK_ID: FiveAxisAdaptiveMM-S5_SpacingMultiplierArbitration_RuntimeReloadQA
           TARGET_COMMIT: 38bab9274fca47b1a18b0cf87f1a46ac71d92873
           BUILDER_VERSION_EXPECTED: S5.SpacingMultiplierArbitration.FullFix.v1
@@ -97,7 +97,7 @@ jobs:
           fi
 
           mkdir -p docs/roadmap/five_axis/runtime_qa/s5
-          export EVIDENCE_PATH="docs/roadmap/five_axis/runtime_qa/s5/run-\${GITHUB_RUN_ID}-attempt-\${GITHUB_RUN_ATTEMPT}.json"
+          export EVIDENCE_PATH="docs/roadmap/five_axis/runtime_qa/s5/run-${GITHUB_RUN_ID}-attempt-${GITHUB_RUN_ATTEMPT}.json"
           python3 - <<'PY'
           import json
           import os
@@ -145,7 +145,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if ! git diff --cached --quiet; then
-            git commit -m "qa: record S5 RuntimeReloadQA run \${GITHUB_RUN_ID} attempt \${GITHUB_RUN_ATTEMPT}"
+            git commit -m "qa: record S5 RuntimeReloadQA run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT}"
             git push origin HEAD:github-actions-task-evidence
           fi
 
@@ -159,12 +159,12 @@ jobs:
         if: always()
         shell: bash
         env:
-          QA_OUTCOME: \${{ steps.runtime_qa.outcome }}
+          QA_OUTCOME: ${{ steps.runtime_qa.outcome }}
         run: |
           {
             echo "## S5 Spacing Multiplier Arbitration RuntimeReloadQA"
             echo
-            echo "- outcome: \${QA_OUTCOME}"
+            echo "- outcome: ${QA_OUTCOME}"
             echo "- executor: GitHub Actions ephemeral runner"
             echo "- target commit present: 38bab927"
             echo "- builder: S5.SpacingMultiplierArbitration.FullFix.v1"
@@ -172,4 +172,4 @@ jobs:
             echo "- effective: false"
             echo "- execution_allowed: false"
             echo "- OKX API accessed: false"
-          } >> "\${GITHUB_STEP_SUMMARY}"
+          } >> "${GITHUB_STEP_SUMMARY}"
