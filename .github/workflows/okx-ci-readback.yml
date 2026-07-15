@@ -49,3 +49,98 @@ jobs:
             echo "- execution_allowed: false"
             echo "- runtime proof: NOT_CLAIMED"
           } >> "${GITHUB_STEP_SUMMARY}"
+
+  promote-private:
+    name: Promote sanitized snapshot to Private
+    needs:
+      - static-readback
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Require scoped Private token
+        env:
+          PRIVATE_PROMOTION_TOKEN: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+        run: |
+          if [ -z "${PRIVATE_PROMOTION_TOKEN}" ]; then
+            echo "PRIVATE_PROMOTION_TOKEN_MISSING"
+            exit 1
+          fi
+
+      - name: Checkout Public verified source
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          path: public
+          persist-credentials: false
+
+      - name: Revalidate Public boundary
+        working-directory: public
+        run: |
+          python3 tools/ci/validate_public_boundary.py
+          python3 -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Checkout Private destination
+        uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Prepare Private public-verified branch
+        working-directory: private
+        shell: bash
+        run: |
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin public-verified >/dev/null 2>&1; then
+            git fetch origin public-verified
+            git switch -C public-verified origin/public-verified
+            git merge --no-edit origin/main
+          else
+            git switch -c public-verified
+          fi
+
+      - name: Build sanitized promotion bundle
+        run: |
+          python3 public/tools/ci/build_private_promotion_bundle.py \
+            --public-root public \
+            --private-root private \
+            --source-sha "${GITHUB_SHA}" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --workflow-run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Commit to Private public-verified
+        working-directory: private
+        shell: bash
+        run: |
+          git add public_verified/okx-adaptive-defense-shadow
+          git add docs/roadmap/public_ci/verified/latest.json
+          if git diff --cached --quiet; then
+            echo "No promotion changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: promote Public CI snapshot ${GITHUB_SHA::12}"
+          git push origin HEAD:public-verified
+
+      - name: Write promotion summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## OKX Public to Private Promotion"
+            echo
+            echo "- source commit: ${GITHUB_SHA}"
+            echo "- destination: okx_bot_private/public-verified"
+            echo "- public CI dependency: PASS"
+            echo "- shadow_only: true"
+            echo "- effective: false"
+            echo "- execution_allowed: false"
+            echo "- runtime proof: NOT_CLAIMED"
+          } >> "${GITHUB_STEP_SUMMARY}"
