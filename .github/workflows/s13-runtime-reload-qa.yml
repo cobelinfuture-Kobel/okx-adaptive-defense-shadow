@@ -1,0 +1,74 @@
+name: OKX S13 RuntimeReloadQA
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/s13-runtime-reload-qa.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - working-directory: private
+        run: python3 -m pip install --disable-pip-version-check pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from adaptive_defense.system_assisted_simulation import simulate_system_assisted_scenario
+          chain={"full_chain_shadow_readback_state":"READY","full_chain_terminal_digest":"t","inst_id":"R","consumer_readback":{"consumer_readback_state":"MATCH","consumer_source_digest":"t"},"shadow_only":True,"effective":False,"execution_allowed":False}
+          fixture={"scenario_id":"reload","schema_version":"Fixture.v1","inst_id":"R","deterministic_seed":13,"input_terminal_digest":"t","baseline_spacing_bps":100,"base_buy_size_scale":1,"base_sell_size_scale":1,"base_buy_order_count":10,"base_sell_order_count":10,"spacing_multiplier":1.2,"buy_size_scale":.8,"sell_size_scale":.7,"buy_count_scale":.8,"sell_count_scale":.7,"side_effects":{"BUY":"INVENTORY_INCREASING","SELL":"INVENTORY_REDUCING"}}
+          left=simulate_system_assisted_scenario(full_chain_readback=chain,fixture=fixture)
+          right=simulate_system_assisted_scenario(full_chain_readback=chain,fixture=fixture)
+          assert left["assisted_simulation_state"]=="READY"
+          assert left["simulation_result_digest"]==right["simulation_result_digest"]
+          assert left["effective_path_isolation_state"]=="ISOLATED"
+          assert left["shadow_only"] and not left["effective"] and not left["execution_allowed"]
+          assert not left["network_access_allowed"] and not left["order_mutation_allowed"]
+          PY
+          python3 -m pytest -q tests/test_system_assisted_simulation.py tests/test_full_chain_shadow_readback.py tests/test_cross_axis_authority_consolidation.py tests/test_five_axis_control_plan_shadow_builder.py
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin github-actions/s13-runtime-evidence >/dev/null 2>&1; then
+            git fetch origin github-actions/s13-runtime-evidence
+            git switch -C github-actions/s13-runtime-evidence origin/github-actions/s13-runtime-evidence
+            git merge --no-edit origin/main
+          else
+            git switch -c github-actions/s13-runtime-evidence origin/main
+          fi
+          mkdir -p docs/roadmap/five_axis/runtime_qa/s13
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          p=os.environ["QA_OUTCOME"]=="success"
+          e={"schema_version":"five_axis_runtime_reload_qa_v1","task_id":"FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_RuntimeReloadQA","status":"PASS" if p else "FAIL","private_main_commit":os.environ["PRIVATE_MAIN_COMMIT"],"fresh_process_import":"PASS" if p else "FAIL","deterministic_replay_result":"PASS" if p else "FAIL","bounded_parameter_result":"PASS" if p else "FAIL","effective_path_isolation_result":"PASS" if p else "FAIL","focused_tests_result":"PASS" if p else "FAIL","shadow_only":True,"effective":False,"execution_allowed":False,"simulation_only":True,"okx_api_accessed":False,"orders_modified":False,"workflow_run_id":os.environ["GITHUB_RUN_ID"],"workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',"verified_at":datetime.now(timezone.utc).isoformat()}
+          Path("docs/roadmap/five_axis/runtime_qa/s13/latest.json").write_text(json.dumps(e,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+          git add docs/roadmap/five_axis/runtime_qa/s13/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record S13 RuntimeReloadQA ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/s13-runtime-evidence
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
