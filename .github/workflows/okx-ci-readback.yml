@@ -1,0 +1,49 @@
+name: OKX Public CI Readback
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: okx-public-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-readback:
+    name: Static safety readback
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout verified source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Validate public boundary
+        run: python3 tools/ci/validate_public_boundary.py
+
+      - name: Run focused tests
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Write verification summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## OKX Public CI Readback"
+            echo
+            echo "- repository: ${GITHUB_REPOSITORY}"
+            echo "- commit: ${GITHUB_SHA}"
+            echo "- ref: ${GITHUB_REF}"
+            echo "- shadow_only: true"
+            echo "- effective: false"
+            echo "- execution_allowed: false"
+            echo "- runtime proof: NOT_CLAIMED"
+          } >> "${GITHUB_STEP_SUMMARY}"
