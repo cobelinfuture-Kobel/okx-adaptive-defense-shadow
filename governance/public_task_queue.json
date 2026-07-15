@@ -4,24 +4,26 @@
   "product_task_queue_authority": "private_repository",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion_FullFix",
-  "proposed_next_task": "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion_FullFix",
+  "current_task": null,
+  "proposed_next_task": "PRIVATE_REPOSITORY_AUTHORITY_CONTINUES_PRODUCT_QUEUE",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
-    "OKX-GOV-PublicCI-S2_StaticCI_Pilot_PASS"
+    "OKX-GOV-PublicCI-S2_StaticCI_Pilot_PASS",
+    "OKX-GOV-PublicCI-S3_PublicPushPrivatePromotion_FullFix_PASS"
   ],
   "last_verified_pilot": {
-    "head_commit": "c4dff58d6f406c6f664f5203449070355efadf0a",
-    "workflow_run_id": 29429749228,
+    "head_commit": "638791b77dbf4f98b507d0bc84cf10556a3432c3",
+    "workflow_run_id": 29432063008,
     "workflow_conclusion": "success",
-    "tracked_file_count": 12,
-    "focused_tests_passed": 6,
-    "focused_tests_failed": 0
+    "tracked_file_count": 14,
+    "read_only_probe_run_id": 29431612464,
+    "private_destination_branch": "public-verified",
+    "private_promotion_status": "PROMOTED_VERIFIED_PUBLIC_SNAPSHOT"
   },
   "automation": {
     "github_actions_continuous": true,
-    "codex_mode": "active_until_promotion_pilot",
+    "codex_mode": "rest_after_promotion_pass",
     "public_to_private_push_allowed": true,
     "public_to_private_push_scope": "okx_bot_private/public-verified",
     "public_to_private_push_event": "main_after_static_ci_pass",
