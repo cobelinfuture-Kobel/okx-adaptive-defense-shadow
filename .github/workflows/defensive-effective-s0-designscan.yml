@@ -1,0 +1,119 @@
+name: OKX DefensiveEffective S0 Limited Integration DesignScan
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/defensive-effective-s0-designscan.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: github-actions/defensive-effective-s0-designscan
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          target=Path("docs/roadmap/defensive_effective/s0_limited_integration_designscan.md")
+          text=target.read_text(encoding="utf-8")
+          required=[
+            "DESIGN READY FOR DENY-BY-DEFAULT FULLFIX",
+            "SHADOW_LOCKED",
+            "ONE_SHOT_ARMED",
+            "READBACK_VERIFIED",
+            "ROLLBACK_REQUIRED",
+            "RELOCKED_SHADOW",
+            "one_shot_only=true",
+            "manual_approval_required=true",
+            "auto_loop=false",
+            "max_symbols=1",
+            "max_action_count=1",
+            "risk_increasing_allowed=false",
+            "new_inventory_allowed=false",
+            "leverage_increase_allowed=false",
+            "automatic_relock_to_shadow=true",
+            "effective_activation_allowed=false",
+            "one_shot_apply_performed=false",
+            "Public CI may validate the contract and state machine, but cannot grant a live authorization",
+            "No OKX API access",
+          ]
+          forbidden=[
+            "auto_loop=true",
+            "risk_increasing_allowed=true",
+            "new_inventory_allowed=true",
+            "leverage_increase_allowed=true",
+            "max_symbols>1",
+            "max_action_count>1",
+          ]
+          missing=[value for value in required if value not in text]
+          present=[value for value in forbidden if value in text]
+          if missing or present:
+              raise SystemExit(f"DEFENSIVE_EFFECTIVE_S0_DESIGNSCAN missing={missing} forbidden={present}")
+          changed=set(subprocess.check_output(
+              ["git","diff","--name-only","origin/main...HEAD"],text=True,encoding="utf-8"
+          ).splitlines())
+          allowed={str(target),"docs/roadmap/defensive_effective/designscan/s0/latest.json"}
+          unexpected=sorted(changed-allowed)
+          if unexpected:
+              raise SystemExit(f"DEFENSIVE_EFFECTIVE_S0_SCOPE_VIOLATION:{unexpected}")
+          PY
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_HEAD_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p docs/roadmap/defensive_effective/designscan/s0
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          passed=os.environ["QA_OUTCOME"]=="success"
+          result="PASS" if passed else "FAIL"
+          evidence={
+            "schema_version":"defensive_effective_designscan_evidence_v1",
+            "task_id":"DefensiveEffective-S0_LimitedIntegration_DesignScan",
+            "status":result,
+            "private_head_commit":os.environ["PRIVATE_HEAD_COMMIT"],
+            "contract_completeness_result":result,
+            "state_machine_result":result,
+            "one_shot_bounds_result":result,
+            "rollback_relock_result":result,
+            "live_authority_isolation_result":result,
+            "shadow_only":True,
+            "effective":False,
+            "execution_allowed":False,
+            "effective_activation_allowed":False,
+            "one_shot_apply_performed":False,
+            "okx_api_accessed":False,
+            "orders_modified":False,
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+            "verified_at":datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/defensive_effective/designscan/s0/latest.json").write_text(
+              json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+          git add docs/roadmap/defensive_effective/designscan/s0/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record DefensiveEffective S0 DesignScan ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/defensive-effective-s0-designscan
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
