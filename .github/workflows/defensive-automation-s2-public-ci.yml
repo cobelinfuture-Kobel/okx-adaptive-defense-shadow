@@ -68,7 +68,13 @@ jobs:
         working-directory: _private
         shell: python
         run: |
-          from adaptive_defense import canonical_signal_eligibility as module
+          import importlib.util
+          from pathlib import Path
+          path = Path("adaptive_defense/canonical_signal_eligibility.py")
+          spec = importlib.util.spec_from_file_location("canonical_signal_eligibility_s2", path)
+          assert spec is not None and spec.loader is not None
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
           assert module.VALIDATION_MODE == "FAIL_CLOSED_SHADOW_ELIGIBILITY_ONLY"
           assert module.SAFETY == {
               "shadow_only": True,
