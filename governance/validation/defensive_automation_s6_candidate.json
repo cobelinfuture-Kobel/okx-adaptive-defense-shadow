@@ -1,0 +1,22 @@
+{
+  "schema_version": "defensive_automation_s6_public_validation_v1",
+  "task_id": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 62,
+  "immutable_candidate_sha": "8af977b6c779752aa54ed5404d0cc7239e184243",
+  "expected_source_file": "adaptive_defense/shadow_preflight_rollback.py",
+  "expected_test_file": "tests/test_shadow_preflight_rollback.py",
+  "expected_current_task_before_closeout": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
+  "expected_engine_mode": "SHADOW_PREFLIGHT_CAS_READBACK_ROLLBACK_RELOCK_SIMULATION_ONLY",
+  "expected_focused_test_count_minimum": 20,
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "simulation_only": true,
+    "memory_adapter_only": true,
+    "runtime_mutation_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_immutable_private_candidate_validation_only"
+}
