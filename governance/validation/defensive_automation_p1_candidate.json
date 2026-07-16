@@ -1,0 +1,17 @@
+{
+  "schema_version": "defensive_automation_public_validation_v1",
+  "task_id": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 50,
+  "immutable_candidate_sha": "35a715c15354deaa679ab44bd86287e410fb1442",
+  "expected_status": "PASS",
+  "expected_milestone_count": 12,
+  "expected_next_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_repository_evidence_validation_only"
+}
