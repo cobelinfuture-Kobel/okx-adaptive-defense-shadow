@@ -1,0 +1,133 @@
+name: OKX DefensiveEffective S0 RuntimeQA
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/defensive-effective-s0-runtime.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: main
+          path: private
+          fetch-depth: 0
+          persist-credentials: true
+      - run: python3 -m pip install pytest==8.4.1
+      - id: qa
+        continue-on-error: true
+        working-directory: private
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from adaptive_defense.limited_effective_integration import MemoryParameterAdapter, run_mock_one_shot
+          evidence={
+            "s12":{"state":"READY","digest":"s12","consumer_readback_state":"MATCH","shadow_only":True,"effective":False,"execution_allowed":False},
+            "s13":{"state":"READY","digest":"s13","consumer_readback_state":"MATCH","shadow_only":True,"effective":False,"execution_allowed":False},
+            "s14":{"state":"SHADOW_CONTRACT_VALIDATED","digest":"s14","consumer_readback_state":"MATCH","shadow_only":True,"effective":False,"execution_allowed":False,"authorization_granted":False},
+            "s15":{"state":"SHADOW_CANARY_PLAN_VALIDATED","digest":"s15","consumer_readback_state":"MATCH","shadow_only":True,"effective":False,"execution_allowed":False,"authorization_granted":False},
+          }
+          contract={
+            "schema_version":"DefensiveEffectiveLimitedIntegration-S0.v1","action_id":"runtime-action-1","approval_id":"runtime-approval-1","approval_identity":"operator-ref","approval_timestamp_ms":1500,
+            "inst_id":"BTC-USDT-SWAP","action_class":"WIDEN_SPACING_DEFENSIVELY","parameter_name":"spacing_multiplier","old_value":1.0,"proposed_value":1.1,"maximum_delta":0.1,
+            "s12_digest":"s12","s13_digest":"s13","s14_digest":"s14","s15_digest":"s15","nonce":"runtime-nonce-1","issued_at_ms":1000,"expires_at_ms":5000,
+            "maximum_duration_ms":1000,"readback_source":"memory-fixture","readback_tolerance":0.0001,"readback_deadline_ms":500,"rollback_value":1.0,
+            "rollback_triggers":["TIMEOUT","READBACK_MISMATCH","PARTIAL_APPLY","PROCESS_RESTART","SAFETY_VETO","SERVICE_FLOOR_FAILURE","RISK_INCREASE"],
+            "rollback_deadline_ms":500,"max_symbols":1,"max_action_count":1,"one_shot_only":True,"manual_approval_required":True,"auto_loop":False,
+            "risk_increasing_allowed":False,"new_inventory_allowed":False,"leverage_increase_allowed":False,"automatic_relock_to_shadow":True,"live_activation_requested":False,
+          }
+          adapter=MemoryParameterAdapter({"spacing_multiplier":1.0})
+          result=run_mock_one_shot(contract=contract,upstream_evidence=evidence,adapter=adapter,now_ms=2000)
+          assert result["state_trace"][-1]=="RELOCKED_SHADOW"
+          assert result["mock_apply_performed"] is True
+          assert result["live_apply_performed"] is False
+          assert result["live_authorization_granted"] is False
+          assert result["effective"] is False and result["execution_allowed"] is False
+          assert result["okx_api_accessed"] is False and result["orders_modified"] is False
+          Path("/tmp/de-s0-input.json").write_text(json.dumps({"contract":contract,"evidence":evidence},sort_keys=True),encoding="utf-8")
+          Path("/tmp/de-s0-consumed-nonce.txt").write_text(contract["nonce"],encoding="utf-8")
+          PY
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from adaptive_defense.limited_effective_integration import validate_limited_integration_contract
+          payload=json.loads(Path("/tmp/de-s0-input.json").read_text(encoding="utf-8"))
+          nonce=Path("/tmp/de-s0-consumed-nonce.txt").read_text(encoding="utf-8")
+          result=validate_limited_integration_contract(contract=payload["contract"],upstream_evidence=payload["evidence"],now_ms=2000,seen_nonces={nonce})
+          assert result["capability_state"]=="DENIED_APPROVAL_REPLAY"
+          assert result["simulation_authorized"] is False
+          assert result["live_authorization_granted"] is False
+          assert result["effective_activation_allowed"] is False
+          PY
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from adaptive_defense.limited_effective_integration import MemoryParameterAdapter, run_mock_one_shot
+          payload=json.loads(Path("/tmp/de-s0-input.json").read_text(encoding="utf-8"))
+          adapter=MemoryParameterAdapter({"spacing_multiplier":1.0},force_readback_mismatch=True)
+          result=run_mock_one_shot(contract=payload["contract"],upstream_evidence=payload["evidence"],adapter=adapter,now_ms=2000)
+          assert "ROLLBACK_REQUIRED" in result["state_trace"]
+          assert "ROLLBACK_VERIFIED" in result["state_trace"]
+          assert result["state_trace"][-1]=="RELOCKED_SHADOW"
+          assert adapter.values["spacing_multiplier"]==1.0
+          assert result["live_apply_performed"] is False
+          PY
+          pytest -q tests/test_limited_effective_integration.py
+          test -z "$(git status --porcelain)"
+      - if: always()
+        working-directory: private
+        env:
+          QA_OUTCOME: ${{ steps.qa.outcome }}
+        run: |
+          set -euo pipefail
+          export PRIVATE_MAIN_COMMIT="$(git rev-parse HEAD)"
+          git checkout -B github-actions/defensive-effective-s0-runtime-evidence
+          mkdir -p docs/roadmap/defensive_effective/runtime_qa/s0
+          python3 - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          passed=os.environ["QA_OUTCOME"]=="success"
+          result="PASS" if passed else "FAIL"
+          evidence={
+            "schema_version":"defensive_effective_runtime_qa_evidence_v1",
+            "task_id":"DefensiveEffective-S0_LimitedIntegration_RuntimeQA",
+            "status":result,
+            "private_main_commit":os.environ["PRIVATE_MAIN_COMMIT"],
+            "fresh_process_mock_apply_readback_result":result,
+            "restart_replay_denial_result":result,
+            "rollback_relock_result":result,
+            "focused_tests_result":result,
+            "terminal_state":"RELOCKED_SHADOW" if passed else "SHADOW_LOCKED",
+            "shadow_only":True,
+            "effective":False,
+            "execution_allowed":False,
+            "effective_activation_allowed":False,
+            "live_one_shot_apply_allowed":False,
+            "live_apply_performed":False,
+            "mock_apply_only":True,
+            "okx_api_accessed":False,
+            "orders_modified":False,
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "workflow_run_url":f'{os.environ["GITHUB_SERVER_URL"]}/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}',
+            "verified_at":datetime.now(timezone.utc).isoformat(),
+          }
+          Path("docs/roadmap/defensive_effective/runtime_qa/s0/latest.json").write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+          git add docs/roadmap/defensive_effective/runtime_qa/s0/latest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "qa: record DefensiveEffective S0 RuntimeQA ${GITHUB_RUN_ID}"
+          git push origin HEAD:github-actions/defensive-effective-s0-runtime-evidence
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
