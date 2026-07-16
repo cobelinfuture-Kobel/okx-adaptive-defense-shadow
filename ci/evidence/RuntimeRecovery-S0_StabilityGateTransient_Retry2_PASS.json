@@ -1,0 +1,33 @@
+{
+  "schema_version": "runtime_recovery_public_evidence_v1",
+  "task_id": "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2",
+  "verdict": "PASS_CLOSED_OUT",
+  "private_deployed_sha": "9f064620cd9d51523359f3ec101d1fc15edd2686",
+  "private_evidence_pr": 48,
+  "private_evidence_merge_sha": "19982572c54ac5a900ee8897973c0d6658f7bb2a",
+  "public_ci_run_id": 29481607778,
+  "public_ci_conclusion": "success",
+  "runtime_summary": {
+    "observation_seconds": 607.350,
+    "sample_count": 11,
+    "health_http_200_count": 11,
+    "status_http_200_count": 11,
+    "status_p95_ms": 9.233,
+    "status_max_ms": 9.233,
+    "response_bytes_min": 1145,
+    "response_bytes_max": 1159,
+    "confirmed_failures": 0,
+    "transient_count": 1,
+    "corroboration_count": 3,
+    "corroboration_result": "RECOVERED_IDENTITY_CONFIRMED"
+  },
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "live_apply_performed": false,
+    "orders_modified": false,
+    "qa_direct_okx_api_calls": false
+  },
+  "sanitized_evidence_only": true
+}

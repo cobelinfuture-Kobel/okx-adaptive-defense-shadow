@@ -24,7 +24,8 @@
     "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan_FullFix_RuntimeReloadQA_PASS_SHADOW_CONTRACT_ONLY",
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_PASS",
-    "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY"
+    "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY",
+    "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -92,6 +93,17 @@
     "effective_activation_allowed": false,
     "live_apply_performed": false,
     "terminal_state": "RELOCKED_SHADOW"
+  },
+  "last_runtime_recovery": {
+    "task_id": "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2",
+    "status": "PASS_CLOSED_OUT",
+    "private_deployed_sha": "9f064620cd9d51523359f3ec101d1fc15edd2686",
+    "private_evidence_pr": 48,
+    "private_evidence_merge_sha": "19982572c54ac5a900ee8897973c0d6658f7bb2a",
+    "public_ci_run_id": 29481607778,
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false
   },
   "operator_authorization": {
     "authorization_type": "CAPABILITY_CONSTRUCTION_COMPLETED",
