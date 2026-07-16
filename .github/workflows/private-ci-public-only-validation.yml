@@ -1,0 +1,96 @@
+name: OKX GOV Private-CI Public-Only Validation
+
+on:
+  push:
+    branches:
+      - governance/private-ci-public-only-validation
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-private-trigger-fullfix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIVATE_CANDIDATE_SHA: 5e7a35c9cbb50f0e306d6b975e5340008b646345
+    steps:
+      - name: Checkout Public validation
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate sanitized manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/private_ci_public_only_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["immutable_candidate_sha"] == "5e7a35c9cbb50f0e306d6b975e5340008b646345"
+          assert d["expected_private_trigger_contract"] == {
+              "workflow_dispatch": True,
+              "push": False,
+              "pull_request": False,
+          }
+          raw = p.read_text(encoding="utf-8").lower()
+          for forbidden in ("ghp_", "github_pat_", "password=", "api_key", "secret="):
+              assert forbidden not in raw
+
+      - name: Checkout immutable Private candidate
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Validate Private manual-only trigger and governance
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          root = Path("_private")
+          workflow = (root / ".github/workflows/okx-ci-readback.yml").read_text(encoding="utf-8")
+          trigger = workflow.split("\njobs:", 1)[0]
+          assert "workflow_dispatch:" in trigger
+          assert "\n  push:" not in trigger
+          assert "\n  pull_request:" not in trigger
+          assert "cobelinfuture-Kobel/okx-adaptive-defense-shadow" in workflow
+
+          policy = (root / "docs/roadmap/OKX_CI_READBACK_GATE_POLICY.md").read_text(encoding="utf-8")
+          contract = (root / "docs/roadmap/OKX_CI_READBACK_WORKFLOW_CONTRACT.md").read_text(encoding="utf-8")
+          assert "Public-only CI authority amendment" in policy
+          assert "Public-only trigger amendment" in contract
+          assert "workflow_dispatch only" in contract
+
+          evidence = json.loads((root / "docs/roadmap/governance/private_ci_public_only/latest.json").read_text(encoding="utf-8"))
+          assert evidence["status"] == "PASS"
+          assert evidence["private_triggers"] == {
+              "workflow_dispatch": True,
+              "push": False,
+              "pull_request": False,
+          }
+          assert evidence["automated_ci_authority"] == "cobelinfuture-Kobel/okx-adaptive-defense-shadow"
+
+          queue = json.loads((root / "docs/roadmap/task_queue.json").read_text(encoding="utf-8"))
+          control = json.loads((root / "docs/roadmap/task_queue_parts/control_state.json").read_text(encoding="utf-8"))
+          assert queue["current_task"] == control["current_task"] == "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression"
+          for state in (queue, control):
+              c = state["default_constraints"]
+              assert c["shadow_only"] is True
+              assert c["effective"] is False
+              assert c["execution_allowed"] is False
+
+      - name: Emit sanitized result
+        run: |
+          echo "OKX-GOV Private CI automatic triggers: DISABLED"
+          echo "Automated CI authority: Public GitHub Actions"
+          echo "Private workflow: workflow_dispatch only"
+          echo "Current product task remains P2 blocked"
