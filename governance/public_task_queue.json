@@ -53,13 +53,13 @@
     "public_to_private_push_on_pull_request": false,
     "private_main_direct_write_allowed": false,
     "private_promotion_secret": "PRIVATE_PROMOTION_TOKEN",
-    "runtime_proof_claim_allowed": true
+    "runtime_proof_claim_allowed": false
   },
   "safety": {
     "shadow_only": true,
     "effective": false,
     "execution_allowed": false,
-    "runtime_access_allowed": "github_actions_ephemeral_only",
+    "runtime_access_allowed": false,
     "okx_api_access_allowed": false,
     "effective_governor_contract_design_allowed": true,
     "effective_activation_allowed": false,
