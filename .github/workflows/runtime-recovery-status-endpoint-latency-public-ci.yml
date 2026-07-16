@@ -18,7 +18,7 @@ permissions:
 jobs:
   validate-private-candidate:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 15
     steps:
       - name: Checkout trusted Public workflow definition
@@ -52,10 +52,8 @@ jobs:
         id: validation
         env:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
-        run: >-
-          python tools/ci/validate_private_status_endpoint_candidate.py
-          --candidate-root private-candidate
-          --candidate-sha "$CANDIDATE_SHA"
+        shell: pwsh
+        run: python tools/ci/validate_private_status_endpoint_candidate.py --candidate-root private-candidate --candidate-sha $env:CANDIDATE_SHA
 
       - name: Write sanitized CI evidence
         if: always()
@@ -63,16 +61,14 @@ jobs:
           PRIVATE_PR_NUMBER: ${{ inputs.private_pr_number }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
+        shell: pwsh
         run: |
-          {
-            echo "## RuntimeRecovery S0 Public CI"
-            echo
-            echo "- task_id: RuntimeRecovery-S0_StatusEndpointLatency_PublicCI_Retry"
-            echo "- private_pr_number: ${PRIVATE_PR_NUMBER}"
-            echo "- candidate_sha: ${CANDIDATE_SHA}"
-            echo "- validation_outcome: ${VALIDATION_OUTCOME}"
-            echo "- shadow_only: true"
-            echo "- effective: false"
-            echo "- execution_allowed: false"
-            echo "- public_evidence_only: true"
-          } >> "$GITHUB_STEP_SUMMARY"
+          @(
+            '## RuntimeRecovery S0 Public CI',
+            '',
+            '- task_id: RuntimeRecovery-S0_StatusEndpointLatency_PublicCI_Retry',
+            "- private_pr_number: $env:PRIVATE_PR_NUMBER",
+            "- candidate_sha: $env:CANDIDATE_SHA",
+            "- validation_outcome: $env:VALIDATION_OUTCOME",
+            '- shadow_only: true', '- effective: false', '- execution_allowed: false', '- public_evidence_only: true'
+          ) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY

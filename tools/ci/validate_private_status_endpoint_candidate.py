@@ -79,7 +79,7 @@ def main() -> int:
     env = os.environ.copy()
     env["PYTHONPATH"] = "."
     tests = _run(
-        [sys.executable, "-m", "pytest", "-q", "tests/test_status_snapshot.py", "tests/test_adaptive_defense.py::test_status_api_exposes_risk_archetype_suppression_metadata_like_runtime_status"],
+        [sys.executable, "-m", "pytest", "-q", "tests/test_status_snapshot.py", "tests/test_runtime_stability_monitor.py", "tests/test_runtime_lifecycle.py", "tests/test_adaptive_defense.py::test_status_api_exposes_risk_archetype_suppression_metadata_like_runtime_status"],
         cwd=root,
         env=env,
     )
