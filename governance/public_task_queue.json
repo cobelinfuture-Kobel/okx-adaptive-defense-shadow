@@ -27,7 +27,8 @@
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY",
     "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT",
     "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation_PASS",
-    "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation_PASS"
+    "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation_PASS",
+    "OKX-GOV-PrivateCITrigger_DisableAndPublicOnly_FullFix_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -36,7 +37,9 @@
     "stop_only_on_failure": true,
     "codex_intervention_after_consecutive_failures": 3,
     "codex_pull_allowed_only_after_threshold": true,
-    "local_process_allowed_before_threshold": false
+    "local_process_allowed_before_threshold": false,
+    "private_ci_automatic": false,
+    "public_ci_only": true
   },
   "last_verified_pilot": {
     "head_commit": "cfe09fe7d8c129b696d73f4fa819d658d09c2986",
@@ -55,7 +58,10 @@
     "public_to_private_push_on_pull_request": false,
     "private_main_direct_write_allowed": false,
     "private_promotion_secret": "PRIVATE_PROMOTION_TOKEN",
-    "runtime_proof_claim_allowed": false
+    "runtime_proof_claim_allowed": false,
+    "private_ci_trigger_mode": "workflow_dispatch_only",
+    "private_ci_required_for_promotion": false,
+    "public_ci_required_for_promotion": true
   },
   "safety": {
     "shadow_only": true,
@@ -129,5 +135,16 @@
     "current_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
     "final_target": "BOUNDED_DEFENSIVE_AUTOMATION_V1_READY",
     "live_gate": "S9_EXACT_POLICY_ENVELOPE_APPROVAL"
+  },
+  "last_governance_task": {
+    "task_id": "OKX-GOV-PrivateCITrigger_DisableAndPublicOnly_FullFix",
+    "status": "PASS",
+    "private_pr": 52,
+    "private_merge_sha": "2dc11098f4dfa91e95bfd91a67d8535eab37090f",
+    "public_validation_pr": 10,
+    "public_validation_run_id": 29508121958,
+    "private_workflow_runs_during_migration": 0,
+    "private_trigger_mode": "workflow_dispatch_only",
+    "automated_ci_authority": "cobelinfuture-Kobel/okx-adaptive-defense-shadow"
   }
 }
