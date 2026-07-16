@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 2e466369ab9349b1b06277c65ceba6ab1d04474f
+      PRIVATE_CANDIDATE_SHA: 5e7a35c9cbb50f0e306d6b975e5340008b646345
     steps:
       - name: Checkout Public validation
         uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
           p = Path("governance/validation/private_ci_public_only_candidate.json")
           d = json.loads(p.read_text(encoding="utf-8"))
-          assert d["immutable_candidate_sha"] == "2e466369ab9349b1b06277c65ceba6ab1d04474f"
+          assert d["immutable_candidate_sha"] == "5e7a35c9cbb50f0e306d6b975e5340008b646345"
           assert d["expected_private_trigger_contract"] == {
               "workflow_dispatch": True,
               "push": False,
@@ -71,7 +71,7 @@ jobs:
           assert "workflow_dispatch only" in contract
 
           evidence = json.loads((root / "docs/roadmap/governance/private_ci_public_only/latest.json").read_text(encoding="utf-8"))
-          assert evidence["status"] in {"IMPLEMENTED_PENDING_PUBLIC_CI", "PASS"}
+          assert evidence["status"] == "PASS"
           assert evidence["private_triggers"] == {
               "workflow_dispatch": True,
               "push": False,
