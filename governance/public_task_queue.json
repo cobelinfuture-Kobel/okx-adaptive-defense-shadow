@@ -5,8 +5,8 @@
   "task_order_source": "operator-approved DefensiveAutomation P0-P4 and S0-S16 ordered roadmap",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
-  "proposed_next_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
+  "current_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
+  "proposed_next_task": "DefensiveAutomation-P3_OneShotToAutomationGapAnalysis",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -26,7 +26,8 @@
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_PASS",
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY",
     "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT",
-    "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation_PASS"
+    "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation_PASS",
+    "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -83,13 +84,15 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation",
+    "task_id": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
     "status": "PASS",
-    "private_main_commit": "86e7c9bc26fecd4d4fb02e208645c6bc0299a4ca",
-    "public_ci_run_id": 29503548571,
+    "private_main_commit": "cf4ea62a8e7335334a3796f0c6bd9ffbc950f595",
+    "public_ci_run_id": 29504259994,
     "public_ci_conclusion": "success",
-    "private_pr": 49,
-    "public_validation_pr": 5,
+    "private_pr": 50,
+    "public_validation_pr": 7,
+    "milestone_count": 12,
+    "current_runtime_regression": "DEFERRED_TO_P2",
     "effective_activation_allowed": false,
     "live_apply_performed": false
   },
@@ -121,9 +124,9 @@
   "automation_roadmap": {
     "roadmap_id": "OKX-DEFENSIVE-AUTOMATION-V1-ROADMAP",
     "total_tasks": 22,
-    "completed_tasks": 1,
-    "remaining_tasks": 21,
-    "current_task": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
+    "completed_tasks": 2,
+    "remaining_tasks": 20,
+    "current_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
     "final_target": "BOUNDED_DEFENSIVE_AUTOMATION_V1_READY",
     "live_gate": "S9_EXACT_POLICY_ENVELOPE_APPROVAL"
   }
