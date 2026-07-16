@@ -5,8 +5,8 @@
   "task_order_source": "operator-approved DefensiveAutomation P0-P4 and S0-S16 ordered roadmap",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration",
-  "proposed_next_task": "DefensiveAutomation-S4_AutomaticExactActionContractCompiler",
+  "current_task": "DefensiveAutomation-S4_AutomaticExactActionContractCompiler",
+  "proposed_next_task": "DefensiveAutomation-S5_LeaseIdempotencyAndReplayProtection",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -34,7 +34,8 @@
     "DefensiveAutomation-P4_AutomationGovernanceFullFix_PASS",
     "DefensiveAutomation-S0_AutomationTerminalDefinition_PASS",
     "DefensiveAutomation-S1_AuthorityEnvelopeAndKillSwitch_PASS",
-    "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate_PASS"
+    "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate_PASS",
+    "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -96,16 +97,17 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate",
+    "task_id": "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration",
     "status": "PASS",
-    "private_main_commit": "45808a6ac0fe9bda8d5dd9ebce946147a1e87446",
-    "validated_private_candidate": "5c344aa4fec0385d20f9ecc6d5fed282fb0126be",
-    "public_ci_run_id": 29514050066,
-    "public_ci_job_id": 87674455093,
+    "private_main_commit": "7851bbc1d043338bdbe33a8289726769fd39d3ec",
+    "validated_private_candidate": "66701e274fb7661cbaf8bf2bc331e05907164e58",
+    "public_ci_run_id": 29514726318,
+    "public_ci_job_id": 87676754527,
     "public_ci_conclusion": "success",
-    "private_pr": 58,
-    "public_validation_pr": 12,
-    "closed_gap": "G16_SIGNAL_ELIGIBILITY_FRESHNESS_RUNTIME_IDENTITY",
+    "private_pr": 59,
+    "public_validation_pr": 13,
+    "closed_gap": "G02_PART_A_DETERMINISTIC_FIVE_AXIS_PROPOSAL_ARBITRATION",
+    "exact_action_contract_present": false,
     "effective_activation_allowed": false,
     "live_apply_performed": false
   },
@@ -137,9 +139,9 @@
   "automation_roadmap": {
     "roadmap_id": "OKX-DEFENSIVE-AUTOMATION-V1-ROADMAP",
     "total_tasks": 22,
-    "completed_tasks": 8,
-    "remaining_tasks": 14,
-    "current_task": "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration",
+    "completed_tasks": 9,
+    "remaining_tasks": 13,
+    "current_task": "DefensiveAutomation-S4_AutomaticExactActionContractCompiler",
     "final_target": "BOUNDED_DEFENSIVE_AUTOMATION_V1_READY",
     "live_gate": "S9_EXACT_POLICY_ENVELOPE_APPROVAL"
   },
