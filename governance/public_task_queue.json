@@ -2,11 +2,11 @@
   "schema_version": "okx_public_ci_orchestration_v1",
   "authority_scope": "public_ci_orchestration_and_bounded_promotion",
   "product_task_queue_authority": "private_repository",
-  "task_order_source": "user-approved Five-Axis unfinished task sequence",
+  "task_order_source": "operator-approved DefensiveAutomation P0-P4 and S0-S16 ordered roadmap",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "AWAITING_EXACT_LIVE_ONE_SHOT_CONTRACT",
-  "proposed_next_task": "DefensiveEffective-S0_LiveOneShotApply",
+  "current_task": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
+  "proposed_next_task": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -25,7 +25,8 @@
     "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan_FullFix_RuntimeReloadQA_PASS_SHADOW_CONTRACT_ONLY",
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_PASS",
     "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY",
-    "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT"
+    "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT",
+    "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -82,17 +83,15 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveEffective-S0_LimitedIntegration_RuntimeQA",
-    "status": "PASS_MOCK_ONLY_RELOCKED_SHADOW",
-    "private_main_commit": "e10b61970d813186fe436e3621a0897d83cfd55f",
-    "workflow_run_id": 29469649384,
-    "attempts": 1,
-    "fullfix_attempts": 3,
-    "failure_threshold_not_exceeded": true,
-    "codex_pull_used": false,
+    "task_id": "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation",
+    "status": "PASS",
+    "private_main_commit": "86e7c9bc26fecd4d4fb02e208645c6bc0299a4ca",
+    "public_ci_run_id": 29503548571,
+    "public_ci_conclusion": "success",
+    "private_pr": 49,
+    "public_validation_pr": 5,
     "effective_activation_allowed": false,
-    "live_apply_performed": false,
-    "terminal_state": "RELOCKED_SHADOW"
+    "live_apply_performed": false
   },
   "last_runtime_recovery": {
     "task_id": "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2",
@@ -106,18 +105,26 @@
     "execution_allowed": false
   },
   "operator_authorization": {
-    "authorization_type": "CAPABILITY_CONSTRUCTION_COMPLETED",
-    "authorized_task": "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA",
+    "authorization_type": "ORDERED_NON_LIVE_AUTOMATION_ROADMAP_APPROVED",
+    "authorized_task_sequence": "DefensiveAutomation P0-P4 and S0-S16",
     "live_apply_authorized": false,
-    "exact_live_contract_required": true,
-    "runtime_qa_passed": true,
+    "exact_policy_envelope_required_at": "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval",
     "safety_default": "SHADOW_LOCKED"
   },
   "blocking_state": {
-    "status": "BLOCKED_PENDING_EXACT_LIVE_CONTRACT",
-    "task_id": "DefensiveEffective-S0_LiveOneShotApply",
-    "reason": "Capability RuntimeQA passed, but no exact instrument/action/old/proposed value/TTL/readback/rollback contract has been approved.",
+    "status": "LIVE_EFFECTIVE_BLOCKED_UNTIL_S9_EXACT_POLICY_ENVELOPE",
+    "task_id": "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval",
+    "reason": "The ordered development/runtime-validation roadmap is approved, but no exact live policy envelope is approved.",
     "safe_default": "RELOCKED_SHADOW",
     "live_apply_performed": false
+  },
+  "automation_roadmap": {
+    "roadmap_id": "OKX-DEFENSIVE-AUTOMATION-V1-ROADMAP",
+    "total_tasks": 22,
+    "completed_tasks": 1,
+    "remaining_tasks": 21,
+    "current_task": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
+    "final_target": "BOUNDED_DEFENSIVE_AUTOMATION_V1_READY",
+    "live_gate": "S9_EXACT_POLICY_ENVELOPE_APPROVAL"
   }
 }
