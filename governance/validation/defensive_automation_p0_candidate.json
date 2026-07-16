@@ -1,0 +1,16 @@
+{
+  "schema_version": "defensive_automation_public_validation_v1",
+  "task_id": "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 49,
+  "immutable_candidate_sha": "841f97e9a85cbda168e268382d9515a250dac177",
+  "expected_status": "PASS",
+  "expected_next_task": "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation",
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_governance_validation_only"
+}
