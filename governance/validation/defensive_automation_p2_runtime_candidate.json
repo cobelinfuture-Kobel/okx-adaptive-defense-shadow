@@ -1,0 +1,16 @@
+{
+  "schema_version": "defensive_automation_p2_public_regression_v1",
+  "task_id": "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "deployed_runtime_sha": "9f064620cd9d51523359f3ec101d1fc15edd2686",
+  "current_private_main_sha": "cf4ea62a8e7335334a3796f0c6bd9ffbc950f595",
+  "scope": "PUBLIC_FRESH_PROCESS_REGRESSION_ONLY",
+  "closeout_allowed": false,
+  "remaining_required_proof": "LOCAL_DEPLOYED_PID_LISTENER_AND_READBACK",
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "live_apply_authorized": false
+  }
+}
