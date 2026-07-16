@@ -1,0 +1,102 @@
+name: DefensiveAutomation P0 Public Governance CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/p0-governance-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-private-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIVATE_CANDIDATE_SHA: 841f97e9a85cbda168e268382d9515a250dac177
+    steps:
+      - name: Checkout public validation manifest
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate public manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/defensive_automation_p0_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["task_id"] == "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation"
+          assert d["immutable_candidate_sha"] == "841f97e9a85cbda168e268382d9515a250dac177"
+          assert d["safety"] == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "live_apply_authorized": False,
+          }
+          raw = p.read_text(encoding="utf-8").lower()
+          for forbidden in ("ghp_", "github_pat_", "secret=", "password=", "api_key"):
+              assert forbidden not in raw
+
+      - name: Checkout immutable Private candidate
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Validate Private P0 authority state
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          root = Path("_private")
+          def load(path):
+              return json.loads((root / path).read_text(encoding="utf-8"))
+          queue = load("docs/roadmap/task_queue.json")
+          control = load("docs/roadmap/task_queue_parts/control_state.json")
+          completed = load("docs/roadmap/task_queue_parts/completed_tasks.json")
+          backlog = load("docs/roadmap/task_queue_parts/future_architecture_backlog.json")
+          blocked = load("docs/roadmap/task_queue_parts/blocked_tasks.json")
+          evidence = load("docs/roadmap/defensive_automation/p0/latest.json")
+
+          expected_current = "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation"
+          expected_next = "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression"
+          assert queue["current_task"] == control["current_task"] == expected_current
+          assert queue["proposed_next_task"] == control["proposed_next_task"] == expected_next
+          for state in (queue, control):
+              constraints = state["default_constraints"]
+              assert constraints["shadow_only"] is True
+              assert constraints["effective"] is False
+              assert constraints["execution_allowed"] is False
+          markers = set(completed["completed_tasks"])
+          required = {
+              "FiveAxisAdaptiveMM-S5_SpacingMultiplierArbitration_RuntimeReloadQA_PASS",
+              "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan_FullFix_RuntimeReloadQA_PASS_SHADOW_CONTRACT_ONLY",
+              "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY",
+              "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2_PASS_CLOSED_OUT",
+              "DefensiveAutomation-P0_PublicPrivateAuthorityReconciliation_PASS",
+          }
+          assert required <= markers
+          assert not any("AS-S2 Effective Governor" in x for x in backlog["future_architecture_backlog"])
+          assert "LiveEffectivePath_PreS9PolicyEnvelopeApproval" in blocked["blocked_tasks"]
+          assert evidence["status"] == "PASS"
+          assert evidence["goal_distance"] == {"total": 22, "completed": 1, "remaining": 21}
+          safety = evidence["safety"]
+          assert safety["shadow_only"] is True
+          assert safety["effective"] is False
+          assert safety["execution_allowed"] is False
+          assert safety["okx_api_accessed"] is False
+          assert safety["orders_modified"] is False
+
+      - name: Emit sanitized summary
+        run: |
+          echo "P0 authority reconciliation: PASS"
+          echo "Private candidate: ${PRIVATE_CANDIDATE_SHA}"
+          echo "Next task: DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation"
+          echo "Safety: shadow_only=true effective=false execution_allowed=false"
