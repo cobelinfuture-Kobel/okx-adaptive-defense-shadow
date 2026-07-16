@@ -5,8 +5,8 @@
   "task_order_source": "operator-approved DefensiveAutomation P0-P4 and S0-S16 ordered roadmap",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
-  "proposed_next_task": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
+  "current_task": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
+  "proposed_next_task": "DefensiveAutomation-S8_FaultInjectionAndAssistedSimulation",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -37,7 +37,8 @@
     "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate_PASS",
     "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration_PASS",
     "DefensiveAutomation-S4_AutomaticExactActionContractCompiler_PASS",
-    "DefensiveAutomation-S5_LeaseIdempotencyAndReplayProtection_PASS"
+    "DefensiveAutomation-S5_LeaseIdempotencyAndReplayProtection_PASS",
+    "DefensiveAutomation-S6_PreflightReadbackRollbackEngine_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -99,23 +100,23 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveAutomation-S5_LeaseIdempotencyAndReplayProtection",
+    "task_id": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
     "status": "PASS",
-    "private_main_commit": "20e650df1033a1f8e122188c55ca231a2a58a291",
-    "validated_private_candidate": "612c104da32e882b9f53b47ab700827eeede8861",
-    "public_ci_run_id": 29517591577,
-    "public_ci_job_id": 87686396275,
+    "private_main_commit": "674c4ebd0d262296bb1eb131d56189d1398481a8",
+    "validated_private_candidate": "8af977b6c779752aa54ed5404d0cc7239e184243",
+    "public_ci_authority": "PUBLIC_GITHUB_ACTIONS",
+    "public_ci_result_marker": "governance/validation/results/defensive_automation_s6_result.json",
     "public_ci_conclusion": "success",
-    "private_pr": 61,
-    "public_validation_pr": 15,
+    "private_pr": 62,
+    "public_validation_pr": 16,
     "closed_gaps": [
-      "G04_EXECUTION_LEASE_SINGLE_WRITER_SHADOW_BOUNDARY",
-      "G05_PERSISTENT_IDEMPOTENCY_REPLAY_PROTECTION",
-      "G09_PART_A_ATOMIC_LEASE_ACQUISITION_CAS"
+      "G06_PREFLIGHT_CANONICAL_READBACK_MEMORY_SHADOW_BOUNDARY",
+      "G08_ROLLBACK_AND_AUTOMATIC_RELOCK_MEMORY_SHADOW_BOUNDARY",
+      "G09_PART_B_PARAMETER_CAS_MEMORY_SHADOW_BOUNDARY"
     ],
-    "lease_coordination_only": true,
-    "preflight_authorized": false,
-    "mutation_authority_granted": false,
+    "simulation_only": true,
+    "memory_adapter_only": true,
+    "runtime_mutation_allowed": false,
     "approval_state": "PRE_S9_NOT_APPROVED",
     "effective_activation_allowed": false,
     "live_apply_performed": false
@@ -148,9 +149,9 @@
   "automation_roadmap": {
     "roadmap_id": "OKX-DEFENSIVE-AUTOMATION-V1-ROADMAP",
     "total_tasks": 22,
-    "completed_tasks": 11,
-    "remaining_tasks": 11,
-    "current_task": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
+    "completed_tasks": 12,
+    "remaining_tasks": 10,
+    "current_task": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
     "final_target": "BOUNDED_DEFENSIVE_AUTOMATION_V1_READY",
     "live_gate": "S9_EXACT_POLICY_ENVELOPE_APPROVAL"
   },
@@ -158,7 +159,11 @@
     "task_id": "DefensiveAutomation-P4_AutomationGovernanceFullFix",
     "status": "PASS",
     "private_merge_sha": "821574793b3f2b976b165ceb9657fe7a7111ce1f",
-    "authority_lanes": ["D", "R", "L"],
+    "authority_lanes": [
+      "D",
+      "R",
+      "L"
+    ],
     "private_trigger_mode": "workflow_dispatch_only",
     "automated_ci_authority": "cobelinfuture-Kobel/okx-adaptive-defense-shadow"
   }

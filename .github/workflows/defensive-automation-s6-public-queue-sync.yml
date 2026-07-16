@@ -1,0 +1,87 @@
+name: DefensiveAutomation S6 Public Queue Sync
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s6-public-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-public-queue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Verify S6 authoritative PASS marker
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          marker = json.loads(Path("governance/validation/results/defensive_automation_s6_result.json").read_text(encoding="utf-8"))
+          assert marker["authority"] == "PUBLIC_GITHUB_ACTIONS"
+          assert marker["status"] == "PASS"
+          assert marker["immutable_private_candidate"] == "8af977b6c779752aa54ed5404d0cc7239e184243"
+          assert all(value == "success" for value in marker["step_outcomes"].values())
+
+      - name: Apply bounded S6 queue patch
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          path = Path("governance/public_task_queue.json")
+          queue = json.loads(path.read_text(encoding="utf-8"))
+          completed = list(queue.get("completed_tasks", []))
+          marker = "DefensiveAutomation-S6_PreflightReadbackRollbackEngine_PASS"
+          if marker not in completed:
+              completed.append(marker)
+          queue["completed_tasks"] = completed
+          queue["current_task"] = "DefensiveAutomation-S7_ShadowAutopilotFullChain"
+          queue["proposed_next_task"] = "DefensiveAutomation-S8_FaultInjectionAndAssistedSimulation"
+          queue["last_product_task"] = {
+              "task_id": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
+              "status": "PASS",
+              "private_main_commit": "674c4ebd0d262296bb1eb131d56189d1398481a8",
+              "validated_private_candidate": "8af977b6c779752aa54ed5404d0cc7239e184243",
+              "public_ci_authority": "PUBLIC_GITHUB_ACTIONS",
+              "public_ci_result_marker": "governance/validation/results/defensive_automation_s6_result.json",
+              "public_ci_conclusion": "success",
+              "private_pr": 62,
+              "public_validation_pr": 16,
+              "closed_gaps": [
+                  "G06_PREFLIGHT_CANONICAL_READBACK_MEMORY_SHADOW_BOUNDARY",
+                  "G08_ROLLBACK_AND_AUTOMATIC_RELOCK_MEMORY_SHADOW_BOUNDARY",
+                  "G09_PART_B_PARAMETER_CAS_MEMORY_SHADOW_BOUNDARY"
+              ],
+              "simulation_only": True,
+              "memory_adapter_only": True,
+              "runtime_mutation_allowed": False,
+              "approval_state": "PRE_S9_NOT_APPROVED",
+              "effective_activation_allowed": False,
+              "live_apply_performed": False
+          }
+          roadmap = dict(queue.get("automation_roadmap", {}))
+          roadmap["total_tasks"] = 22
+          roadmap["completed_tasks"] = 12
+          roadmap["remaining_tasks"] = 10
+          roadmap["current_task"] = "DefensiveAutomation-S7_ShadowAutopilotFullChain"
+          queue["automation_roadmap"] = roadmap
+          path.write_text(json.dumps(queue, indent=2) + "\n", encoding="utf-8")
+
+      - name: Commit queue sync when changed
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/public_task_queue.json
+          if git diff --cached --quiet; then
+            echo "Public queue already synchronized"
+            exit 0
+          fi
+          git commit -m "ci: sync DefensiveAutomation S6 Public queue"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
