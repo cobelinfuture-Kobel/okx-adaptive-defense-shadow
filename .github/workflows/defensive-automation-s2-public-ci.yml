@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PRIVATE_CANDIDATE_SHA: 985b40f2c3693283afb71a1d8d5c816e954a97dd
+      PRIVATE_CANDIDATE_SHA: 5c344aa4fec0385d20f9ecc6d5fed282fb0126be
 
     steps:
       - name: Checkout Public validation manifest
@@ -33,8 +33,9 @@ jobs:
           p = Path("governance/validation/defensive_automation_s2_candidate.json")
           d = json.loads(p.read_text(encoding="utf-8"))
           assert d["task_id"] == "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate"
-          assert d["immutable_candidate_sha"] == "985b40f2c3693283afb71a1d8d5c816e954a97dd"
+          assert d["immutable_candidate_sha"] == "5c344aa4fec0385d20f9ecc6d5fed282fb0126be"
           assert d["private_pr"] == 58
+          assert d["product_failure_count"] == 1
           assert d["safety"] == {
               "shadow_only": True,
               "effective": False,
