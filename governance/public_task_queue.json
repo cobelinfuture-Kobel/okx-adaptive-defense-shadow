@@ -5,8 +5,8 @@
   "task_order_source": "user-approved Five-Axis unfinished task sequence",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "DefensiveEffective-S0_LimitedIntegration_FullFix",
-  "proposed_next_task": "DefensiveEffective-S0_LimitedIntegration_RuntimeQA",
+  "current_task": "AWAITING_EXACT_LIVE_ONE_SHOT_CONTRACT",
+  "proposed_next_task": "DefensiveEffective-S0_LiveOneShotApply",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -23,7 +23,8 @@
     "FiveAxisAdaptiveMM-S13_SystemAssistedSimulation_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S14_EffectiveGovernorActionContract_DesignScan_FullFix_RuntimeReloadQA_PASS",
     "FiveAxisAdaptiveMM-S15_DefensiveParameterCanary_DesignScan_FullFix_RuntimeReloadQA_PASS_SHADOW_CONTRACT_ONLY",
-    "DefensiveEffective-S0_LimitedIntegration_DesignScan_PASS"
+    "DefensiveEffective-S0_LimitedIntegration_DesignScan_PASS",
+    "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA_PASS_MOCK_ONLY"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -80,22 +81,31 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveEffective-S0_LimitedIntegration_DesignScan",
-    "status": "PASS",
-    "private_main_commit": "475ae8d8071cd459a7963072dbbb4b76662ffdaa",
-    "workflow_run_id": 29469264026,
+    "task_id": "DefensiveEffective-S0_LimitedIntegration_RuntimeQA",
+    "status": "PASS_MOCK_ONLY_RELOCKED_SHADOW",
+    "private_main_commit": "e10b61970d813186fe436e3621a0897d83cfd55f",
+    "workflow_run_id": 29469649384,
     "attempts": 1,
-    "failure_threshold_not_reached": true,
+    "fullfix_attempts": 3,
+    "failure_threshold_not_exceeded": true,
     "codex_pull_used": false,
     "effective_activation_allowed": false,
-    "one_shot_apply_performed": false
+    "live_apply_performed": false,
+    "terminal_state": "RELOCKED_SHADOW"
   },
   "operator_authorization": {
-    "authorization_type": "CAPABILITY_CONSTRUCTION_ONLY",
+    "authorization_type": "CAPABILITY_CONSTRUCTION_COMPLETED",
     "authorized_task": "DefensiveEffective-S0_LimitedIntegration_DesignScan_FullFix_RuntimeQA",
     "live_apply_authorized": false,
     "exact_live_contract_required": true,
-    "approved_at_stage": "DesignScan",
+    "runtime_qa_passed": true,
     "safety_default": "SHADOW_LOCKED"
+  },
+  "blocking_state": {
+    "status": "BLOCKED_PENDING_EXACT_LIVE_CONTRACT",
+    "task_id": "DefensiveEffective-S0_LiveOneShotApply",
+    "reason": "Capability RuntimeQA passed, but no exact instrument/action/old/proposed value/TTL/readback/rollback contract has been approved.",
+    "safe_default": "RELOCKED_SHADOW",
+    "live_apply_performed": false
   }
 }
