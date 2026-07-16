@@ -80,15 +80,10 @@ jobs:
         working-directory: _private
         shell: python
         run: |
-          import importlib.util
-          import sys
+          import importlib
           from pathlib import Path
+          module = importlib.import_module("adaptive_defense.shadow_autopilot_full_chain")
           path = Path("adaptive_defense/shadow_autopilot_full_chain.py")
-          spec = importlib.util.spec_from_file_location("s7_full_chain", path)
-          assert spec is not None and spec.loader is not None
-          module = importlib.util.module_from_spec(spec)
-          sys.modules[spec.name] = module
-          spec.loader.exec_module(module)
           assert module.ORCHESTRATION_MODE == "DETERMINISTIC_ONE_CYCLE_SHADOW_AUTOPILOT_ONLY"
           assert module.SAFETY == {
               "shadow_only": True,
