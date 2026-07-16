@@ -1,0 +1,23 @@
+{
+  "schema_version": "defensive_automation_s7_public_validation_v1",
+  "task_id": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 63,
+  "immutable_candidate_sha": "027b0cb4928a2d7b91f22d9dd20d7ba25ffde15a",
+  "expected_source_file": "adaptive_defense/shadow_autopilot_full_chain.py",
+  "expected_test_file": "tests/test_shadow_autopilot_full_chain.py",
+  "expected_current_task_before_closeout": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
+  "expected_orchestration_mode": "DETERMINISTIC_ONE_CYCLE_SHADOW_AUTOPILOT_ONLY",
+  "expected_focused_test_count_minimum": 15,
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "one_cycle_only": true,
+    "auto_loop": false,
+    "memory_adapter_only": true,
+    "runtime_mutation_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_immutable_private_candidate_validation_only"
+}
