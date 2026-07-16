@@ -1,0 +1,141 @@
+name: DefensiveAutomation S3 Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s3-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-s3-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRIVATE_CANDIDATE_SHA: 66701e274fb7661cbaf8bf2bc331e05907164e58
+
+    steps:
+      - name: Checkout Public validation manifest
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate sanitized manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/defensive_automation_s3_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["task_id"] == "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration"
+          assert d["immutable_candidate_sha"] == "66701e274fb7661cbaf8bf2bc331e05907164e58"
+          assert d["private_pr"] == 59
+          assert d["required_axes"] == [
+              "SERVICE_FLOOR",
+              "INVENTORY_RISK",
+              "ORDER_COUNT",
+              "SIZING",
+              "SPACING",
+          ]
+          assert d["safety"] == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "exact_action_contract_present": False,
+              "contract_compilation_authorized": False,
+              "runtime_mutation_allowed": False,
+              "live_apply_authorized": False,
+          }
+          raw = p.read_text(encoding="utf-8").lower()
+          for forbidden in ("ghp_", "github_pat_", "password=", "api_key", "secret="):
+              assert forbidden not in raw
+
+      - name: Checkout immutable Private candidate
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Provision isolated test dependencies
+        working-directory: _private
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest fastapi pandas python-dotenv httpx uvicorn pyyaml requests websockets
+
+      - name: Validate S3 source safety contract
+        working-directory: _private
+        shell: python
+        run: |
+          import importlib.util
+          from pathlib import Path
+          path = Path("adaptive_defense/deterministic_five_axis_proposal.py")
+          spec = importlib.util.spec_from_file_location("deterministic_five_axis_s3", path)
+          assert spec is not None and spec.loader is not None
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          assert module.ARBITRATION_MODE == "DETERMINISTIC_SHADOW_PROPOSAL_ONLY"
+          assert module.AXIS_ORDER == (
+              "SERVICE_FLOOR",
+              "INVENTORY_RISK",
+              "ORDER_COUNT",
+              "SIZING",
+              "SPACING",
+          )
+          assert module.SAFETY == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "exact_action_contract_present": False,
+              "contract_compilation_authorized": False,
+              "runtime_mutation_allowed": False,
+              "network_access_allowed": False,
+              "order_mutation_allowed": False,
+              "authorization_granted": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+          }
+
+      - name: Run S2 and S3 focused regression
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python -m pytest -q \
+            tests/test_canonical_signal_eligibility.py \
+            tests/test_deterministic_five_axis_proposal.py \
+            tests/test_cross_axis_authority_consolidation.py \
+            tests/test_effective_governor_action_contract.py
+
+      - name: Verify queue remains S3 before accepted closeout
+        working-directory: _private
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text(encoding="utf-8"))
+          control = json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text(encoding="utf-8"))
+          expected = "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration"
+          assert queue["current_task"] == control["current_task"] == expected
+          for state in (queue, control):
+              c = state["default_constraints"]
+              assert c["shadow_only"] is True
+              assert c["effective"] is False
+              assert c["execution_allowed"] is False
+
+      - name: Emit sanitized result
+        run: |
+          echo "DefensiveAutomation S3 immutable candidate: PASS"
+          echo "Private candidate: ${PRIVATE_CANDIDATE_SHA}"
+          echo "Safety: shadow_only=true effective=false execution_allowed=false"
+          echo "Exact action contract: NOT_PRESENT"
+          echo "Runtime proof: NOT_CLAIMED"

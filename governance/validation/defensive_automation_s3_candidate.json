@@ -1,0 +1,28 @@
+{
+  "schema_version": "defensive_automation_s3_public_validation_v1",
+  "task_id": "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 59,
+  "immutable_candidate_sha": "66701e274fb7661cbaf8bf2bc331e05907164e58",
+  "expected_source_file": "adaptive_defense/deterministic_five_axis_proposal.py",
+  "expected_test_file": "tests/test_deterministic_five_axis_proposal.py",
+  "expected_current_task_before_closeout": "DefensiveAutomation-S3_DeterministicFiveAxisProposalArbitration",
+  "required_axes": [
+    "SERVICE_FLOOR",
+    "INVENTORY_RISK",
+    "ORDER_COUNT",
+    "SIZING",
+    "SPACING"
+  ],
+  "expected_focused_test_count_minimum": 13,
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "exact_action_contract_present": false,
+    "contract_compilation_authorized": false,
+    "runtime_mutation_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_immutable_private_candidate_validation_only"
+}
