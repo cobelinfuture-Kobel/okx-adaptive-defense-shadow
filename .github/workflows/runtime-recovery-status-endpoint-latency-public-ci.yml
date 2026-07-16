@@ -33,7 +33,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install fixed test runner
-        run: python -m pip install --disable-pip-version-check --quiet pytest==8.3.5
+        run: >-
+          python -m pip install --disable-pip-version-check --quiet
+          pytest==8.3.5 fastapi==0.115.6 pandas==2.2.3 python-dotenv==1.0.1
+          httpx==0.28.1 websockets==14.1
 
       - name: Checkout immutable Private candidate read-only
         uses: actions/checkout@1044a6dea927916f2c38ba5aeffbc0a847b1221a
