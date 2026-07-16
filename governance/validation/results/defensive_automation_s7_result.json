@@ -1,0 +1,25 @@
+{
+  "authority": "PUBLIC_GITHUB_ACTIONS",
+  "immutable_private_candidate": "027b0cb4928a2d7b91f22d9dd20d7ba25ffde15a",
+  "safety": {
+    "auto_loop": false,
+    "effective": false,
+    "execution_allowed": false,
+    "live_apply_authorized": false,
+    "memory_adapter_only": true,
+    "one_cycle_only": true,
+    "runtime_mutation_allowed": false,
+    "shadow_only": true
+  },
+  "schema_version": "defensive_automation_s7_public_ci_result_v1",
+  "status": "FAIL",
+  "step_outcomes": {
+    "manifest": "success",
+    "private_checkout": "success",
+    "provision": "success",
+    "queue": "success",
+    "source": "failure",
+    "tests": "success"
+  },
+  "task_id": "DefensiveAutomation-S7_ShadowAutopilotFullChain"
+}
