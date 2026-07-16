@@ -1,0 +1,22 @@
+{
+  "schema_version": "defensive_automation_s4_public_validation_v1",
+  "task_id": "DefensiveAutomation-S4_AutomaticExactActionContractCompiler",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 60,
+  "immutable_candidate_sha": "19a0b7c8ec7bc31c952c2e1fbcda0923b2ff7658",
+  "expected_source_file": "adaptive_defense/automatic_exact_action_contract.py",
+  "expected_test_file": "tests/test_automatic_exact_action_contract.py",
+  "expected_current_task_before_closeout": "DefensiveAutomation-S4_AutomaticExactActionContractCompiler",
+  "expected_compilation_mode": "SEALED_EXACT_CONTRACT_CANDIDATE_SHADOW_ONLY",
+  "expected_focused_test_count_minimum": 13,
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "executable_contract_present": false,
+    "approval_state": "PRE_S9_NOT_APPROVED",
+    "lease_present": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_immutable_private_candidate_validation_only"
+}
