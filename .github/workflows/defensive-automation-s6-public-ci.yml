@@ -1,0 +1,133 @@
+name: DefensiveAutomation S6 Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s6-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-s6-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRIVATE_CANDIDATE_SHA: 8af977b6c779752aa54ed5404d0cc7239e184243
+
+    steps:
+      - name: Checkout Public validation manifest
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate sanitized manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/defensive_automation_s6_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["task_id"] == "DefensiveAutomation-S6_PreflightReadbackRollbackEngine"
+          assert d["private_pr"] == 62
+          assert d["immutable_candidate_sha"] == "8af977b6c779752aa54ed5404d0cc7239e184243"
+          assert d["expected_engine_mode"] == "SHADOW_PREFLIGHT_CAS_READBACK_ROLLBACK_RELOCK_SIMULATION_ONLY"
+          assert d["expected_focused_test_count_minimum"] >= 20
+          assert d["safety"] == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "simulation_only": True,
+              "memory_adapter_only": True,
+              "runtime_mutation_allowed": False,
+              "live_apply_authorized": False,
+          }
+          raw = p.read_text(encoding="utf-8").lower()
+          for forbidden in ("ghp_", "github_pat_", "password=", "api_key", "secret="):
+              assert forbidden not in raw
+
+      - name: Checkout immutable Private candidate
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Provision isolated test dependencies
+        working-directory: _private
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest fastapi pandas python-dotenv httpx uvicorn pyyaml requests websockets
+
+      - name: Validate S6 source safety contract
+        working-directory: _private
+        shell: python
+        run: |
+          import importlib.util
+          from pathlib import Path
+          path = Path("adaptive_defense/shadow_preflight_rollback.py")
+          spec = importlib.util.spec_from_file_location("s6_preflight", path)
+          assert spec is not None and spec.loader is not None
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          assert module.ENGINE_MODE == "SHADOW_PREFLIGHT_CAS_READBACK_ROLLBACK_RELOCK_SIMULATION_ONLY"
+          assert module.SAFETY == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "simulation_only": True,
+              "memory_adapter_only": True,
+              "runtime_mutation_allowed": False,
+              "network_access_allowed": False,
+              "order_mutation_allowed": False,
+              "authorization_granted": False,
+              "live_apply_authorized": False,
+              "okx_api_accessed": False,
+              "orders_modified": False,
+          }
+          raw = path.read_text(encoding="utf-8")
+          for forbidden in ("requests.", "httpx.", "websockets.", "place_order", "cancel_order", "move_order"):
+              assert forbidden not in raw
+
+      - name: Run S4 S5 and S6 focused regression
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python -m pytest -q \
+            tests/test_automatic_exact_action_contract.py \
+            tests/test_shadow_lease_idempotency.py \
+            tests/test_shadow_preflight_rollback.py \
+            tests/test_limited_effective_integration.py
+
+      - name: Verify queue remains S6 before accepted closeout
+        working-directory: _private
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text(encoding="utf-8"))
+          control = json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text(encoding="utf-8"))
+          expected = "DefensiveAutomation-S6_PreflightReadbackRollbackEngine"
+          assert queue["current_task"] == control["current_task"] == expected
+          for state in (queue, control):
+              constraints = state["default_constraints"]
+              assert constraints["shadow_only"] is True
+              assert constraints["effective"] is False
+              assert constraints["execution_allowed"] is False
+
+      - name: Emit sanitized result
+        run: |
+          echo "DefensiveAutomation S6 immutable candidate: PASS"
+          echo "Private candidate: ${PRIVATE_CANDIDATE_SHA}"
+          echo "Engine: memory-only preflight/CAS/readback/rollback/relock"
+          echo "Runtime/OKX/order access: NOT_PRESENT"
+          echo "Live authorization: NOT_GRANTED"
