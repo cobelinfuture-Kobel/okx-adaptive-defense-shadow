@@ -3,7 +3,7 @@
   "task_id": "OKX-GOV-PrivateCITrigger_DisableAndPublicOnly_FullFix",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "private_pr": 52,
-  "immutable_candidate_sha": "2e466369ab9349b1b06277c65ceba6ab1d04474f",
+  "immutable_candidate_sha": "5e7a35c9cbb50f0e306d6b975e5340008b646345",
   "expected_private_trigger_contract": {
     "workflow_dispatch": true,
     "push": false,
@@ -16,5 +16,7 @@
     "effective": false,
     "execution_allowed": false,
     "live_apply_authorized": false
-  }
+  },
+  "expected_status": "PASS",
+  "first_public_validation_run_id": 29507963606
 }
