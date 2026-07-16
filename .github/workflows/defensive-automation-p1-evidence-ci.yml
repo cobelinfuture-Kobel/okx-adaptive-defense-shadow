@@ -1,0 +1,111 @@
+name: DefensiveAutomation P1 Public Evidence CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/p1-evidence-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-private-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIVATE_CANDIDATE_SHA: 35a715c15354deaa679ab44bd86287e410fb1442
+    steps:
+      - name: Checkout public validation manifest
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate public manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/defensive_automation_p1_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["task_id"] == "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation"
+          assert d["immutable_candidate_sha"] == "35a715c15354deaa679ab44bd86287e410fb1442"
+          assert d["expected_milestone_count"] == 12
+          assert d["safety"] == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "live_apply_authorized": False,
+          }
+          raw = p.read_text(encoding="utf-8").lower()
+          for forbidden in ("ghp_", "github_pat_", "secret=", "password=", "api_key"):
+              assert forbidden not in raw
+
+      - name: Checkout immutable Private candidate
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Validate twelve milestone evidence chains
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          root = Path("_private")
+          def load(path):
+              return json.loads((root / path).read_text(encoding="utf-8"))
+
+          queue = load("docs/roadmap/task_queue.json")
+          control = load("docs/roadmap/task_queue_parts/control_state.json")
+          completed = load("docs/roadmap/task_queue_parts/completed_tasks.json")
+          evidence = load("docs/roadmap/defensive_automation/p1/latest.json")
+
+          expected_current = "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression"
+          expected_next = "DefensiveAutomation-P3_OneShotToAutomationGapAnalysis"
+          assert queue["current_task"] == control["current_task"] == expected_current
+          assert queue["proposed_next_task"] == control["proposed_next_task"] == expected_next
+          assert "DefensiveAutomation-P1_TwelveMilestoneEvidenceRevalidation_PASS" in completed["completed_tasks"]
+
+          assert evidence["status"] == "PASS"
+          records = evidence["records"]
+          assert evidence["milestone_count"] == len(records) == 12
+          assert len({r["milestone"] for r in records}) == 12
+          for r in records:
+              assert r["status"] == "PASS"
+              assert (root / r["source"]).is_file(), r["source"]
+              assert (root / r["test"]).is_file(), r["test"]
+              assert (root / r["evidence"]).is_file(), r["evidence"]
+              retained = load(r["evidence"])
+              assert retained["status"] == "PASS"
+              assert retained["shadow_only"] is True
+              assert retained["effective"] is False
+              assert retained["execution_allowed"] is False
+              assert retained["okx_api_accessed"] is False
+              assert retained["orders_modified"] is False
+              assert int(r["runtime_run"]) > 0
+
+          assert evidence["conclusions"]["current_deployed_runtime_regression"] == "NOT_EVALUATED_DEFERRED_TO_P2"
+          assert evidence["goal_distance"] == {"total": 22, "completed": 2, "remaining": 20}
+          safety = evidence["safety"]
+          assert safety["shadow_only"] is True
+          assert safety["effective"] is False
+          assert safety["execution_allowed"] is False
+          assert safety["live_apply_authorized"] is False
+          assert safety["okx_api_accessed"] is False
+          assert safety["orders_modified"] is False
+
+      - name: Emit sanitized summary
+        run: |
+          echo "P1 twelve-milestone evidence revalidation: PASS"
+          echo "Private candidate: ${PRIVATE_CANDIDATE_SHA}"
+          echo "Milestones: 12/12"
+          echo "Next task: DefensiveAutomation-P2_CurrentRuntimeFullChainRegression"
+          echo "Safety: shadow_only=true effective=false execution_allowed=false"
