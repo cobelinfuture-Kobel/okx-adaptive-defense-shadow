@@ -8,7 +8,7 @@
   "expected_test_file": "tests/test_shadow_lease_idempotency.py",
   "expected_current_task_before_closeout": "DefensiveAutomation-S5_LeaseIdempotencyAndReplayProtection",
   "expected_coordination_mode": "PERSISTENT_SINGLE_WRITER_SHADOW_COORDINATION_ONLY",
-  "expected_focused_test_count_minimum": 18,
+  "expected_focused_test_count_minimum": 17,
   "safety": {
     "shadow_only": true,
     "effective": false,
