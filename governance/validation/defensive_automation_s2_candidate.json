@@ -1,0 +1,20 @@
+{
+  "schema_version": "defensive_automation_s2_public_validation_v1",
+  "task_id": "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_pr": 58,
+  "immutable_candidate_sha": "985b40f2c3693283afb71a1d8d5c816e954a97dd",
+  "expected_test_file": "tests/test_canonical_signal_eligibility.py",
+  "expected_source_file": "adaptive_defense/canonical_signal_eligibility.py",
+  "expected_current_task_before_closeout": "DefensiveAutomation-S2_CanonicalSignalEligibilityAndFreshnessGate",
+  "expected_focused_test_count_minimum": 10,
+  "safety": {
+    "shadow_only": true,
+    "effective": false,
+    "execution_allowed": false,
+    "proposal_generation_allowed": false,
+    "runtime_mutation_allowed": false,
+    "live_apply_authorized": false
+  },
+  "public_evidence_scope": "sanitized_immutable_private_candidate_validation_only"
+}
