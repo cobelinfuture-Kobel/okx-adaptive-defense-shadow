@@ -1,0 +1,107 @@
+name: DefensiveAutomation P2 Public Runtime Regression
+
+on:
+  push:
+    branches:
+      - "defensive-automation/p2-public-runtime-regression"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fresh-process-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DEPLOYED_SHA: 9f064620cd9d51523359f3ec101d1fc15edd2686
+      CURRENT_PRIVATE_MAIN_SHA: cf4ea62a8e7335334a3796f0c6bd9ffbc950f595
+    steps:
+      - name: Checkout Public manifest
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate sanitized P2 manifest
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path("governance/validation/defensive_automation_p2_runtime_candidate.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          assert d["task_id"] == "DefensiveAutomation-P2_CurrentRuntimeFullChainRegression"
+          assert d["deployed_runtime_sha"] == "9f064620cd9d51523359f3ec101d1fc15edd2686"
+          assert d["current_private_main_sha"] == "cf4ea62a8e7335334a3796f0c6bd9ffbc950f595"
+          assert d["scope"] == "PUBLIC_FRESH_PROCESS_REGRESSION_ONLY"
+          assert d["closeout_allowed"] is False
+          assert d["safety"] == {
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "live_apply_authorized": False,
+          }
+
+      - name: Checkout immutable Private main
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.CURRENT_PRIVATE_MAIN_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Verify deployed source lineage and runtime-code parity
+        working-directory: _private
+        shell: bash
+        run: |
+          git cat-file -e "${DEPLOYED_SHA}^{commit}"
+          git merge-base --is-ancestor "${DEPLOYED_SHA}" "${CURRENT_PRIVATE_MAIN_SHA}"
+          git diff --exit-code "${DEPLOYED_SHA}" "${CURRENT_PRIVATE_MAIN_SHA}" -- api adaptive_defense server.py
+
+      - name: Checkout deployed runtime source
+        working-directory: _private
+        run: git checkout --detach "${DEPLOYED_SHA}"
+
+      - name: Provision isolated test dependencies
+        working-directory: _private
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest fastapi pandas python-dotenv httpx uvicorn pyyaml requests websockets
+
+      - name: Run S5 through Limited Integration focused regression
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python -m pytest -q             tests/test_spacing_multiplier_arbitration.py             tests/test_tick_rounded_spacing_realization.py             tests/test_position_leg_model.py             tests/test_directional_sizing_authority.py             tests/test_order_count_authority.py             tests/test_service_floor_signal_readiness.py             tests/test_cross_axis_authority_consolidation.py             tests/test_full_chain_shadow_readback.py             tests/test_system_assisted_simulation.py             tests/test_effective_governor_action_contract.py             tests/test_defensive_parameter_canary.py             tests/test_limited_effective_integration.py             tests/test_status_snapshot.py
+
+      - name: Verify retained safety evidence
+        working-directory: _private
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          paths = [Path(f"docs/roadmap/five_axis/runtime_qa/s{s}/latest.json") for s in range(5, 16)]
+          paths.append(Path("docs/roadmap/defensive_effective/runtime_qa/s0/latest.json"))
+          for p in paths:
+              d = json.loads(p.read_text(encoding="utf-8"))
+              assert d["status"] == "PASS", p
+              assert d["shadow_only"] is True, p
+              assert d["effective"] is False, p
+              assert d["execution_allowed"] is False, p
+              assert d["okx_api_accessed"] is False, p
+              assert d["orders_modified"] is False, p
+          limited = json.loads(paths[-1].read_text(encoding="utf-8"))
+          assert limited["live_apply_performed"] is False
+
+      - name: Emit sanitized result
+        run: |
+          echo "P2 Public fresh-process regression: PASS"
+          echo "Deployed source SHA: ${DEPLOYED_SHA}"
+          echo "Local deployed PID/listener/readback remains required for P2 closeout"
+          echo "Safety: shadow_only=true effective=false execution_allowed=false"
