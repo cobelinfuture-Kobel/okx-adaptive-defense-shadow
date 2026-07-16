@@ -15,7 +15,7 @@ permissions:
 jobs:
   validate-s2-candidate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       PRIVATE_CANDIDATE_SHA: 985b40f2c3693283afb71a1d8d5c816e954a97dd
 
@@ -57,9 +57,12 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Provision focused test dependency
+      - name: Provision isolated test dependencies
         working-directory: _private
-        run: python -m pip install pytest
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest fastapi pandas python-dotenv httpx uvicorn pyyaml requests websockets
 
       - name: Validate S2 source safety contract
         working-directory: _private
