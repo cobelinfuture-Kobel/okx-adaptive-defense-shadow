@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "defensive-automation/p0-governance-ci-*"
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
