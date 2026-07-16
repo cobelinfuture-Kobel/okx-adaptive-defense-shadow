@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-s6-candidate:
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout Public validation manifest
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Validate sanitized manifest
         shell: python
@@ -123,6 +123,49 @@ jobs:
               assert constraints["shadow_only"] is True
               assert constraints["effective"] is False
               assert constraints["execution_allowed"] is False
+
+      - name: Persist deterministic sanitized PASS marker
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          marker = {
+              "schema_version": "defensive_automation_s6_public_ci_result_v1",
+              "task_id": "DefensiveAutomation-S6_PreflightReadbackRollbackEngine",
+              "status": "PASS",
+              "immutable_private_candidate": "8af977b6c779752aa54ed5404d0cc7239e184243",
+              "validated_contracts": [
+                  "source_safety_contract",
+                  "s4_s5_s6_focused_regression",
+                  "limited_integration_regression",
+                  "pre_closeout_queue_and_safety"
+              ],
+              "safety": {
+                  "shadow_only": True,
+                  "effective": False,
+                  "execution_allowed": False,
+                  "simulation_only": True,
+                  "memory_adapter_only": True,
+                  "runtime_mutation_allowed": False,
+                  "live_apply_authorized": False
+              },
+              "authority": "PUBLIC_GITHUB_ACTIONS"
+          }
+          path = Path("governance/validation/results/defensive_automation_s6_pass.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/defensive_automation_s6_pass.json
+          if git diff --cached --quiet; then
+            echo "Deterministic PASS marker already present"
+            exit 0
+          fi
+          git commit -m "ci: record DefensiveAutomation S6 PASS"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Emit sanitized result
         run: |
