@@ -12,14 +12,15 @@
     "shadow_only": true
   },
   "schema_version": "defensive_automation_s7_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
     "manifest": "success",
     "private_checkout": "success",
     "provision": "success",
     "queue": "success",
-    "source": "failure",
+    "source": "success",
     "tests": "success"
   },
-  "task_id": "DefensiveAutomation-S7_ShadowAutopilotFullChain"
+  "task_id": "DefensiveAutomation-S7_ShadowAutopilotFullChain",
+  "workflow_revision": "S7_AST_SOURCE_SCAN_V3"
 }
