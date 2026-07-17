@@ -23,6 +23,7 @@ jobs:
       - name: Checkout Public validation source
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref || github.ref_name }}
           persist-credentials: true
 
       - name: Validate candidate manifest
@@ -111,7 +112,7 @@ jobs:
               assert constraints["execution_allowed"] is False
 
       - name: Persist sanitized S8 result marker
-        if: always() && github.event_name == 'push'
+        if: always()
         shell: bash
         env:
           MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
@@ -139,7 +140,7 @@ jobs:
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
               "immutable_private_candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
               "step_outcomes": outcomes,
-              "workflow_revision": "S8_RESULT_MARKER_V1",
+              "workflow_revision": "S8_RESULT_MARKER_V2",
               "shadow_only": True,
               "effective": False,
               "execution_allowed": False,
@@ -154,7 +155,8 @@ jobs:
           git add governance/validation/results/s8_result.json
           if ! git diff --cached --quiet; then
             git commit -m "ci: record DefensiveAutomation S8 result"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            TARGET_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+            git push origin "HEAD:${TARGET_BRANCH}"
           fi
 
       - name: Enforce final S8 result
