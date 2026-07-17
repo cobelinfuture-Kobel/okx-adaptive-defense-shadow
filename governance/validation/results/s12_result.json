@@ -1,0 +1,20 @@
+{
+  "contract_compilation_allowed": false,
+  "execution_allowed": false,
+  "immutable_private_candidate": "ce3bc993ff02c9213ba4bf76410614cb55d1c2b9",
+  "live_apply_authorized": false,
+  "schema_version": "defensive_automation_s12_public_ci_result_v1",
+  "single_winner_only": true,
+  "status": "PASS",
+  "step_outcomes": {
+    "manifest": "success",
+    "private_checkout": "success",
+    "provision": "success",
+    "queue": "success",
+    "source": "success",
+    "tests": "success"
+  },
+  "task_id": "DefensiveAutomation-S12",
+  "three_axis_cardinality": 3,
+  "workflow_revision": "S12_AST_SOURCE_SCAN_V1"
+}

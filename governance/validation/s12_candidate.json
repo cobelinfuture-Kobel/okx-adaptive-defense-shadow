@@ -1,0 +1,9 @@
+{
+  "task": "DefensiveAutomation-S12",
+  "candidate": "ce3bc993ff02c9213ba4bf76410614cb55d1c2b9",
+  "private_pr": 68,
+  "validation_scope": "THREE_AXIS_BOUNDED_SHADOW_ARBITRATION_ONLY",
+  "contract_compilation_allowed": false,
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
