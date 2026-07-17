@@ -133,8 +133,9 @@ jobs:
         id: campaign
         continue-on-error: true
         working-directory: _private
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           import json
           from pathlib import Path
           from adaptive_defense.unattended_defensive_automation_qa import (
@@ -159,6 +160,7 @@ jobs:
           assert result["live_apply_authorized"] is False
           assert result["execution_allowed"] is False
           assert len(result["qa_campaign_digest"]) == 64
+          PY
 
       - name: Verify queues remain S15 before closeout
         id: queue
@@ -211,7 +213,7 @@ jobs:
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
               "immutable_private_candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
               "step_outcomes": outcomes,
-              "workflow_revision": "S15_AST_SOURCE_SCAN_V2",
+              "workflow_revision": "S15_AST_SOURCE_SCAN_V3",
               "required_scenario_count": 6,
               "background_loop_allowed": False,
               "automatic_clear_allowed": False,
