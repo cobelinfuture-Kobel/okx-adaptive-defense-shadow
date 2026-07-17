@@ -1,0 +1,9 @@
+{
+  "task": "DefensiveAutomation-S13",
+  "candidate": "141edcf4fa9b3e8976ddfec8ed3ccf8e1ba060a8",
+  "private_pr": 69,
+  "validation_scope": "CIRCUIT_BREAKER_AUTOMATIC_SHADOW_RELOCK_MANUAL_CLEAR_ONLY",
+  "automated_clear_allowed": false,
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
