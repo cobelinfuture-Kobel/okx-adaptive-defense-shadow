@@ -1,0 +1,105 @@
+name: DefensiveAutomation S16 Queue Sync
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s16-public-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-s16-closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+
+      - name: Verify S16 PASS and close Public queue
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          marker = json.loads(Path("governance/validation/results/s16_result.json").read_text())
+          reconciliation = json.loads(Path("governance/validation/results/s16_reconciliation.json").read_text())
+          assert marker["status"] == "PASS"
+          assert marker["immutable_private_candidate"] == "8222439734a2f0841597eb4b11d3e4de1ccf551c"
+          assert marker["workflow_revision"] == "S16_READONLY_CLOSEOUT_V1"
+          assert all(value == "success" for value in marker["step_outcomes"].values())
+          assert reconciliation["closeout_state"] == "BOUNDED_DEFENSIVE_AUTOMATION_V1_EVIDENCE_COMPLETE_LIVE_LOCKED"
+          assert reconciliation["roadmap_completed_after_closeout"] == 22
+          assert reconciliation["roadmap_remaining_after_closeout"] == 0
+          assert reconciliation["live_effective_ready"] is False
+          assert reconciliation["runtime_proof"] == "NOT_CLAIMED"
+          assert reconciliation["effective_readiness"] == "NOT_READY"
+
+          path = Path("governance/public_task_queue.json")
+          queue = json.loads(path.read_text())
+          completed = "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout_PASS"
+          if completed not in queue["completed_tasks"]:
+              queue["completed_tasks"].append(completed)
+          queue["current_task"] = "DefensiveAutomation-V1_CLOSED_SHADOW_ONLY"
+          queue["proposed_next_task"] = None
+          queue["roadmap_status"] = "CLOSED_SHADOW_ONLY_LIVE_LOCKED"
+          queue["next_approved_task"] = None
+          queue["execution_policy"]["auto_continue"] = False
+          queue["execution_policy"]["stop_only_on_failure"] = False
+          queue["execution_policy"]["roadmap_complete"] = True
+          queue["last_product_task"] = {
+              "task_id": "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout",
+              "status": "PASS_CLOSED_SHADOW_ONLY_LIVE_LOCKED",
+              "private_main_commit": "3a6f8a4ba7d032311bfa3ba444e1f7f0d4f0f63c",
+              "validated_private_candidate": "8222439734a2f0841597eb4b11d3e4de1ccf551c",
+              "private_pr": 72,
+              "public_validation_pr": 26,
+              "public_ci_result_marker": "governance/validation/results/s16_result.json",
+              "public_ci_reconciliation_marker": "governance/validation/results/s16_reconciliation.json",
+              "public_ci_result_marker_commit": "c1b30ced6cdb302ee99e1b17e6fc08883b0acd0d",
+              "public_ci_workflow_revision": "S16_READONLY_CLOSEOUT_V1",
+              "stage_count": 16,
+              "required_marker_count": 22,
+              "closeout_digest": "7485eeccc70ee3b3c7ae2055e5f5f4d914cb3d7d7fb95dc248f469004c0c306f",
+              "bounded_defensive_automation_v1_evidence_complete": True,
+              "live_effective_ready": False,
+              "runtime_proof": "NOT_CLAIMED",
+              "effective_readiness": "NOT_READY",
+              "separate_final_action_approval_required": True,
+              "runtime_access_allowed": False,
+              "live_apply_authorized": False,
+              "execution_allowed": False,
+              "runtime_mutation_allowed": False,
+          }
+          queue["blocking_state"] = {
+              "status": "BOUNDED_DEFENSIVE_AUTOMATION_V1_EVIDENCE_COMPLETE_LIVE_APPLY_BLOCKED",
+              "task_id": "DefensiveAutomation-V1",
+              "reason": "The 22-of-22 Shadow evidence roadmap is closed. Current runtime proof, final action approval and Live Effective activation remain absent.",
+              "safe_default": "RELOCKED_SHADOW",
+              "live_apply_performed": False,
+          }
+          queue["automation_roadmap"].update({
+              "completed_tasks": 22,
+              "remaining_tasks": 0,
+              "current_task": "DefensiveAutomation-V1_CLOSED_SHADOW_ONLY",
+              "final_target_status": "EVIDENCE_COMPLETE_LIVE_LOCKED",
+          })
+          assert queue["safety"]["shadow_only"] is True
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
+          assert queue["operator_authorization"]["live_apply_authorized"] is False
+          assert queue["operator_authorization"]["separate_final_action_approval_required"] is True
+          path.write_text(json.dumps(queue, indent=2, ensure_ascii=False) + "\n")
+          PY
+
+      - name: Commit terminal queue state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/public_task_queue.json
+          if ! git diff --cached --quiet; then
+            git commit -m "governance: close DefensiveAutomation V1 roadmap"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
