@@ -1,5 +1,19 @@
 {
   "campaign_log_tail": [
+    "{",
+    "  \"auto_loop\": false,",
+    "  \"automatic_clear_allowed\": false,",
+    "  \"automatic_resume_after_latch_allowed\": false,",
+    "  \"background_loop\": false,",
+    "  \"consumer_readback\": {",
+    "    \"consumer_readback_state\": \"MATCH\",",
+    "    \"consumer_source_digest\": \"0169df12769c2284658fef885e116a3308e1377968345adfe47744c81af6cca5\",",
+    "    \"consumer_type\": \"S15_FINITE_UNATTENDED_SHADOW_QA_NO_RUNTIME_NO_EXECUTOR\",",
+    "    \"execution_allowed\": false,",
+    "    \"live_apply_authorized\": false,",
+    "    \"s16_progression_recommended\": true",
+    "  },",
+    "  \"current_runtime_apply_allowed\": false,",
     "  \"denial_reasons\": [],",
     "  \"digest_chain_verified\": true,",
     "  \"duplicate_scenarios\": [],",
@@ -83,27 +97,10 @@
   ],
   "campaign_return_code": 0,
   "candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
-  "schema_version": "defensive_automation_s15_diagnostic_v1",
+  "schema_version": "defensive_automation_s15_diagnostic_v2",
   "test_log_tail": [
-    "F........................................                                [100%]",
-    "=================================== FAILURES ===================================",
-    "__________________ test_actual_s9_to_s13_evidence_reconciles ___________________",
-    "",
-    "    def test_actual_s9_to_s13_evidence_reconciles() -> None:",
-    "        result = _run()",
-    ">       assert result[\"audit_state\"] == \"EVIDENCE_RECONCILED_SHADOW_ONLY\"",
-    "E       AssertionError: assert 'EVIDENCE_REC...NIED_RELOCKED' == 'EVIDENCE_REC...D_SHADOW_ONLY'",
-    "E         ",
-    "E         - EVIDENCE_RECONCILED_SHADOW_ONLY",
-    "E         + EVIDENCE_RECONCILIATION_DENIED_RELOCKED",
-    "",
-    "tests/test_evidence_audit_reconciliation.py:91: AssertionError",
-    "=========================== short test summary info ============================",
-    "FAILED tests/test_evidence_audit_reconciliation.py::test_actual_s9_to_s13_evidence_reconciles - AssertionError: assert 'EVIDENCE_REC...NIED_RELOCKED' == 'EVIDENCE_REC...D_SHADOW_ONLY'",
-    "  ",
-    "  - EVIDENCE_RECONCILED_SHADOW_ONLY",
-    "  + EVIDENCE_RECONCILIATION_DENIED_RELOCKED",
-    "1 failed, 40 passed in 0.28s"
+    "......................                                                   [100%]",
+    "22 passed in 0.20s"
   ],
-  "test_return_code": 1
+  "test_return_code": 0
 }
