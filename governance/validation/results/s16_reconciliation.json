@@ -1,0 +1,33 @@
+{
+  "bounded_defensive_automation_v1_evidence_complete": true,
+  "closeout_digest": "7485eeccc70ee3b3c7ae2055e5f5f4d914cb3d7d7fb95dc248f469004c0c306f",
+  "closeout_mode": "READONLY_P0_P4_S0_S15_V1_EVIDENCE_ROLLUP",
+  "closeout_state": "BOUNDED_DEFENSIVE_AUTOMATION_V1_EVIDENCE_COMPLETE_LIVE_LOCKED",
+  "consumer_readback": {
+    "consumer_readback_state": "MATCH",
+    "consumer_source_digest": "7485eeccc70ee3b3c7ae2055e5f5f4d914cb3d7d7fb95dc248f469004c0c306f",
+    "consumer_type": "S16_READONLY_V1_CLOSEOUT_NO_RUNTIME_NO_EXECUTOR",
+    "execution_allowed": false,
+    "live_apply_authorized": false
+  },
+  "denial_reasons": [],
+  "effective": false,
+  "effective_readiness": "NOT_READY",
+  "execution_allowed": false,
+  "live_apply_authorized": false,
+  "live_effective_ready": false,
+  "orders_modified": false,
+  "required_marker_count": 22,
+  "required_stage_count": 16,
+  "roadmap_completed_after_closeout": 22,
+  "roadmap_remaining_after_closeout": 0,
+  "roadmap_total": 22,
+  "runtime_access_allowed": false,
+  "runtime_mutation_allowed": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "s16_completion_recommended": true,
+  "schema_version": "DefensiveAutomation-S16.v1",
+  "separate_final_action_approval_required": true,
+  "shadow_only": true,
+  "stage_count": 16
+}

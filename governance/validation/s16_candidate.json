@@ -1,0 +1,12 @@
+{
+  "task": "DefensiveAutomation-S16",
+  "candidate": "8222439734a2f0841597eb4b11d3e4de1ccf551c",
+  "private_pr": 72,
+  "scope": "READONLY_V1_EVIDENCE_CLOSEOUT",
+  "roadmap_total": 22,
+  "precloseout_completed": 21,
+  "runtime": false,
+  "live": false,
+  "execution": false,
+  "orders": false
+}
