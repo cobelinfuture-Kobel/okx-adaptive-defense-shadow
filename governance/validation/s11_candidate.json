@@ -1,0 +1,9 @@
+{
+  "task": "DefensiveAutomation-S11",
+  "candidate": "15d981961891690fb767ac30a2608af576293640",
+  "private_pr": 67,
+  "observation_window_ms": 900000,
+  "background_loop": false,
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
