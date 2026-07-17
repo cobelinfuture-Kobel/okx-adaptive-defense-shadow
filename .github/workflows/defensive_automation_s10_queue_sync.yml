@@ -1,0 +1,111 @@
+name: DefensiveAutomation S10 Queue Sync
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s10-public-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-s10-closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Validate S10 evidence and patch queue
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          marker = json.loads(Path("governance/validation/results/s10_result.json").read_text(encoding="utf-8"))
+          assert marker["status"] == "PASS"
+          assert marker["immutable_private_candidate"] == "1ca598651487e733001b4e0348590eec7ef3d162"
+          assert marker["workflow_revision"] == "S10_AST_SOURCE_SCAN_V2"
+          assert marker["s9_exact_envelope_enforced"] is True
+          assert marker["memory_adapter_only"] is True
+          assert marker["one_cycle_only"] is True
+          assert marker["live_apply_authorized"] is False
+          assert marker["execution_allowed"] is False
+
+          path = Path("governance/public_task_queue.json")
+          queue = json.loads(path.read_text(encoding="utf-8"))
+          completed = list(queue["completed_tasks"])
+          completed_marker = "DefensiveAutomation-S10_SingleAxisBoundedAutomation_PASS"
+          if completed_marker not in completed:
+              completed.append(completed_marker)
+
+          queue["current_task"] = "DefensiveAutomation-S11_SingleAxisObservationWindow"
+          queue["proposed_next_task"] = "DefensiveAutomation-S12_ThreeAxisBoundedArbitration"
+          queue["completed_tasks"] = completed
+          queue["last_product_task"] = {
+              "task_id": "DefensiveAutomation-S10_SingleAxisBoundedAutomation",
+              "status": "PASS",
+              "private_main_commit": "df19b3e7f48a44bcc6c40c5169b5da866e912fcd",
+              "validated_private_candidate": "1ca598651487e733001b4e0348590eec7ef3d162",
+              "private_pr": 66,
+              "public_validation_pr": 20,
+              "public_ci_run_id": 29585603323,
+              "public_ci_job_id": 87901706077,
+              "public_ci_result_marker": "governance/validation/results/s10_result.json",
+              "public_ci_workflow_revision": "S10_AST_SOURCE_SCAN_V2",
+              "policy_envelope_id": "DA-S9-LOWEST-RISK-ONE-SHOT-v1",
+              "inst_id": "BTC-USDT-SWAP",
+              "axis": "INVENTORY_RISK",
+              "action": "REDUCE_NEW_INVENTORY_BIAS",
+              "parameter_name": "new_inventory_bias",
+              "maximum_absolute_delta": 0.05,
+              "memory_adapter_only": True,
+              "one_cycle_only": True,
+              "auto_loop": False,
+              "live_apply_authorized": False,
+              "execution_allowed": False,
+              "runtime_mutation_allowed": False
+          }
+          queue["automation_roadmap"]["completed_tasks"] = 16
+          queue["automation_roadmap"]["remaining_tasks"] = 6
+          queue["automation_roadmap"]["current_task"] = "DefensiveAutomation-S11_SingleAxisObservationWindow"
+          queue["blocking_state"] = {
+              "status": "S11_SHADOW_OBSERVATION_REQUIRED_LIVE_APPLY_BLOCKED",
+              "task_id": "DefensiveAutomation-S11_SingleAxisObservationWindow",
+              "reason": "S10 bounded Shadow cycle passed; fixed-window observation evidence is still required before broader arbitration.",
+              "safe_default": "RELOCKED_SHADOW",
+              "live_apply_performed": False
+          }
+          assert queue["safety"]["shadow_only"] is True
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
+          assert queue["operator_authorization"]["live_apply_authorized"] is False
+          path.write_text(json.dumps(queue, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+      - name: Commit queue sync when changed
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/public_task_queue.json
+          if ! git diff --cached --quiet; then
+            git commit -m "roadmap: sync S10 closeout to S11"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Verify synchronized boundary
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("governance/public_task_queue.json").read_text(encoding="utf-8"))
+          assert queue["current_task"] == "DefensiveAutomation-S11_SingleAxisObservationWindow"
+          assert queue["proposed_next_task"] == "DefensiveAutomation-S12_ThreeAxisBoundedArbitration"
+          assert queue["automation_roadmap"]["completed_tasks"] == 16
+          assert queue["automation_roadmap"]["remaining_tasks"] == 6
+          assert queue["last_product_task"]["live_apply_authorized"] is False
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
