@@ -15,8 +15,8 @@
     "provision": "success",
     "queue": "success",
     "source": "success",
-    "tests": "failure"
+    "tests": "success"
   },
   "task_id": "DefensiveAutomation-S15",
-  "workflow_revision": "S15_AST_SOURCE_SCAN_V1"
+  "workflow_revision": "S15_AST_SOURCE_SCAN_V2"
 }
