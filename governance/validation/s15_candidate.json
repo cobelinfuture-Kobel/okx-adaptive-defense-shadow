@@ -1,0 +1,11 @@
+{
+  "task": "DefensiveAutomation-S15",
+  "candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
+  "private_pr": 71,
+  "validation_scope": "FINITE_SIX_SCENARIO_UNATTENDED_SHADOW_QA_ONLY",
+  "background_loop_allowed": false,
+  "automatic_clear_allowed": false,
+  "runtime_access_allowed": false,
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
