@@ -1,0 +1,94 @@
+name: DefensiveAutomation S15 Queue Sync
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s15-public-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-s15-closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+
+      - name: Verify S15 PASS marker and update bounded queue fields
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          marker = json.loads(Path("governance/validation/results/s15_result.json").read_text(encoding="utf-8"))
+          assert marker["status"] == "PASS"
+          assert marker["immutable_private_candidate"] == "c27473e14416d3424617f9e9b851da7bf3539198"
+          assert marker["workflow_revision"] == "S15_AST_SOURCE_SCAN_V3"
+          assert all(value == "success" for value in marker["step_outcomes"].values())
+          queue_path = Path("governance/public_task_queue.json")
+          queue = json.loads(queue_path.read_text(encoding="utf-8"))
+          completed_marker = "DefensiveAutomation-S15_UnattendedDefensiveAutomationQA_PASS"
+          if completed_marker not in queue["completed_tasks"]:
+              queue["completed_tasks"].append(completed_marker)
+          queue["current_task"] = "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout"
+          queue["proposed_next_task"] = None
+          queue["last_product_task"] = {
+              "task_id": "DefensiveAutomation-S15_UnattendedDefensiveAutomationQA",
+              "status": "PASS",
+              "private_main_commit": "f0eba1f2dff1f92a6297b7fe7411b645575a6af1",
+              "validated_private_candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
+              "private_pr": 71,
+              "public_validation_pr": 25,
+              "public_ci_run_id": None,
+              "public_ci_job_id": None,
+              "public_ci_result_marker": "governance/validation/results/s15_result.json",
+              "public_ci_result_marker_commit": "23d27dfdbe58bd903930b2ebc12063c239bea5c7",
+              "public_ci_workflow_revision": "S15_AST_SOURCE_SCAN_V3",
+              "required_scenario_count": 6,
+              "terminal_parity_verified": True,
+              "digest_chain_verified": True,
+              "kill_switch_dominance_verified": True,
+              "manual_clear_only_verified": True,
+              "hard_lock_containment_verified": True,
+              "unexpected_progression_count": 0,
+              "background_loop": False,
+              "unattended_runtime_operation_authorized": False,
+              "automatic_clear_allowed": False,
+              "automatic_resume_after_latch_allowed": False,
+              "runtime_access_allowed": False,
+              "live_apply_authorized": False,
+              "execution_allowed": False,
+              "runtime_mutation_allowed": False,
+          }
+          queue["blocking_state"] = {
+              "status": "S16_BOUNDED_DEFENSIVE_AUTOMATION_V1_CLOSEOUT_REQUIRED_LIVE_APPLY_BLOCKED",
+              "task_id": "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout",
+              "reason": "S15 finite unattended Shadow QA passed; V1 evidence rollup and closeout remain required.",
+              "safe_default": "RELOCKED_SHADOW",
+              "live_apply_performed": False,
+          }
+          queue["automation_roadmap"].update({
+              "completed_tasks": 21,
+              "remaining_tasks": 1,
+              "current_task": "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout",
+          })
+          assert queue["safety"]["shadow_only"] is True
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
+          assert queue["operator_authorization"]["live_apply_authorized"] is False
+          queue_path.write_text(json.dumps(queue, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+      - name: Commit queue sync when changed
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/public_task_queue.json
+          if ! git diff --cached --quiet; then
+            git commit -m "governance: sync DefensiveAutomation S15 closeout"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
