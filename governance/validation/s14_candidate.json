@@ -1,0 +1,10 @@
+{
+  "task": "DefensiveAutomation-S14",
+  "candidate": "42a69769e7c355a39a348b4fbced3f65a8155e27",
+  "private_pr": 70,
+  "validation_scope": "READONLY_S9_TO_S13_EVIDENCE_AUDIT_AND_RECONCILIATION",
+  "automatic_repair_allowed": false,
+  "runtime_access_allowed": false,
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
