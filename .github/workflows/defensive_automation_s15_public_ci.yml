@@ -105,16 +105,29 @@ jobs:
           for forbidden in ("requests.", "httpx.", "websockets.", "place_order", "cancel_order", "move_order", "subprocess.", "os.system", "time.sleep"):
               assert forbidden not in raw
 
-      - name: Run S14 and S15 focused regression
+      - name: Validate sealed S14 handoff and run S15 focused regression
         id: tests
         continue-on-error: true
         working-directory: _private
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
-          python -m pytest -q \
-            tests/test_evidence_audit_reconciliation.py \
-            tests/test_unattended_defensive_automation_qa.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s14 = json.loads(Path("docs/roadmap/defensive_automation/s14/latest.json").read_text(encoding="utf-8"))
+          assert s14["task_id"] == "DefensiveAutomation-S14_EvidenceAuditAndReconciliation"
+          assert s14["status"] == "PASS"
+          assert s14["audit"]["private_public_queue_reconciliation"] is True
+          assert s14["audit"]["cross_stage_lineage_verified"] is True
+          assert s14["audit"]["safety_boundary_verified"] is True
+          assert s14["audit"]["automatic_evidence_repair_performed"] is False
+          assert s14["audit"]["s15_progression_recommended"] is True
+          assert s14["safety"]["effective"] is False
+          assert s14["safety"]["execution_allowed"] is False
+          assert s14["safety"]["live_apply_authorized"] is False
+          PY
+          python -m pytest -q tests/test_unattended_defensive_automation_qa.py
 
       - name: Run actual finite unattended Shadow QA
         id: campaign
@@ -198,7 +211,7 @@ jobs:
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
               "immutable_private_candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
               "step_outcomes": outcomes,
-              "workflow_revision": "S15_AST_SOURCE_SCAN_V1",
+              "workflow_revision": "S15_AST_SOURCE_SCAN_V2",
               "required_scenario_count": 6,
               "background_loop_allowed": False,
               "automatic_clear_allowed": False,
