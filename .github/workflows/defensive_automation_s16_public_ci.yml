@@ -1,12 +1,6 @@
 name: DefensiveAutomation S16 Public CI
 
 on:
-  push:
-    branches:
-      - "defensive-automation/s16-public-ci-*"
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -98,7 +92,7 @@ jobs:
           PY
 
       - name: Persist S16 result marker
-        if: always() && github.event_name == 'push'
+        if: always()
         env:
           MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
           PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
@@ -106,7 +100,6 @@ jobs:
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
           RECONCILIATION_OUTCOME: ${{ steps.reconciliation.outcome }}
         run: |
-          git pull --rebase origin "${GITHUB_REF_NAME}"
           python - <<'PY'
           import json
           import os
@@ -141,13 +134,6 @@ jobs:
           path.parent.mkdir(parents=True, exist_ok=True)
           path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
           PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add governance/validation/results/s16_result.json governance/validation/results/s16_reconciliation.json
-          if ! git diff --cached --quiet; then
-            git commit -m "ci: record DefensiveAutomation S16 result"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
 
       - name: Enforce final result
         if: always()
