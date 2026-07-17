@@ -8,7 +8,7 @@
   "schema_version": "defensive_automation_s10_public_ci_result_v1",
   "status": "FAIL",
   "step_outcomes": {
-    "manifest": "success",
+    "manifest": "failure",
     "private_checkout": "success",
     "provision": "success",
     "queue": "success",
