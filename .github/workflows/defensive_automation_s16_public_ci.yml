@@ -1,0 +1,163 @@
+name: DefensiveAutomation S16 Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s16-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-s16-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PRIVATE_CANDIDATE_SHA: 8222439734a2f0841597eb4b11d3e4de1ccf551c
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("governance/validation/s16_candidate.json").read_text())
+          assert data["candidate"] == "8222439734a2f0841597eb4b11d3e4de1ccf551c"
+          assert data["private_pr"] == 72
+          assert data["scope"] == "READONLY_V1_EVIDENCE_CLOSEOUT"
+          assert data["roadmap_total"] == 22
+          assert data["precloseout_completed"] == 21
+          assert not any(data[key] for key in ("runtime", "live", "execution", "orders"))
+          PY
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Provision pytest
+        id: provision
+        continue-on-error: true
+        run: python -m pip install pytest
+
+      - name: Run S16 focused regression
+        id: tests
+        continue-on-error: true
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest -q tests/test_bounded_defensive_automation_v1_closeout.py
+
+      - name: Reconcile actual V1 evidence
+        id: reconciliation
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path("_private").resolve()))
+          from adaptive_defense.bounded_defensive_automation_v1_closeout import FINAL_STATE, evaluate_bounded_defensive_automation_v1_closeout
+          evidence = [json.loads(Path(f"_private/docs/roadmap/defensive_automation/s{i}/latest.json").read_text()) for i in range(16)]
+          result = evaluate_bounded_defensive_automation_v1_closeout(
+              stage_evidence=evidence,
+              private_queue=json.loads(Path("_private/docs/roadmap/task_queue.json").read_text()),
+              public_queue=json.loads(Path("governance/public_task_queue.json").read_text()),
+              completed_partition=json.loads(Path("_private/docs/roadmap/task_queue_parts/defensive_automation_completed_tasks.json").read_text()),
+          )
+          assert result["closeout_state"] == FINAL_STATE, result["denial_reasons"]
+          assert result["stage_count"] == 16
+          assert result["required_marker_count"] == 22
+          assert result["roadmap_completed_after_closeout"] == 22
+          assert result["roadmap_remaining_after_closeout"] == 0
+          assert result["live_effective_ready"] is False
+          assert result["runtime_proof"] == "NOT_CLAIMED"
+          assert result["effective_readiness"] == "NOT_READY"
+          assert result["execution_allowed"] is False
+          path = Path("governance/validation/results/s16_reconciliation.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+          PY
+
+      - name: Persist S16 result marker
+        if: always() && github.event_name == 'push'
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          RECONCILIATION_OUTCOME: ${{ steps.reconciliation.outcome }}
+        run: |
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          outcomes = {key: os.environ[key] for key in (
+              "MANIFEST_OUTCOME", "PRIVATE_CHECKOUT_OUTCOME", "PROVISION_OUTCOME",
+              "TESTS_OUTCOME", "RECONCILIATION_OUTCOME"
+          )}
+          normalized = {key.lower().replace("_outcome", ""): value for key, value in outcomes.items()}
+          rec_path = Path("governance/validation/results/s16_reconciliation.json")
+          rec = json.loads(rec_path.read_text()) if rec_path.exists() else {}
+          marker = {
+              "schema_version": "defensive_automation_s16_public_ci_result_v1",
+              "task_id": "DefensiveAutomation-S16",
+              "status": "PASS" if all(value == "success" for value in normalized.values()) else "FAIL",
+              "immutable_private_candidate": "8222439734a2f0841597eb4b11d3e4de1ccf551c",
+              "step_outcomes": normalized,
+              "workflow_revision": "S16_READONLY_CLOSEOUT_V1",
+              "roadmap_total": 22,
+              "stage_count": rec.get("stage_count"),
+              "required_marker_count": rec.get("required_marker_count"),
+              "closeout_digest": rec.get("closeout_digest"),
+              "v1_evidence_complete": rec.get("bounded_defensive_automation_v1_evidence_complete", False),
+              "runtime_proof": "NOT_CLAIMED",
+              "effective_readiness": "NOT_READY",
+              "runtime": False,
+              "live": False,
+              "execution": False,
+              "orders": False,
+          }
+          path = Path("governance/validation/results/s16_result.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/s16_result.json governance/validation/results/s16_reconciliation.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record DefensiveAutomation S16 result"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Enforce final result
+        if: always()
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          RECONCILIATION_OUTCOME: ${{ steps.reconciliation.outcome }}
+        run: |
+          for outcome in "$MANIFEST_OUTCOME" "$PRIVATE_CHECKOUT_OUTCOME" "$PROVISION_OUTCOME" "$TESTS_OUTCOME" "$RECONCILIATION_OUTCOME"; do
+            test "$outcome" = success
+          done
