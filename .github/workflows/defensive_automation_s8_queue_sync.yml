@@ -1,0 +1,104 @@
+name: DefensiveAutomation S8 Queue Sync
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s8-public-ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-s8-closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Validate S8 evidence and patch queue
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          marker_path = Path("governance/validation/results/s8_result.json")
+          marker = json.loads(marker_path.read_text(encoding="utf-8"))
+          assert marker["status"] == "PASS"
+          assert marker["immutable_private_candidate"] == "c34e81e43750e49b4faa4d49148b44b8caca3769"
+          assert marker["workflow_revision"] == "S8_AST_SOURCE_SCAN_V3"
+          assert marker["s9_approval_granted"] is False
+
+          queue_path = Path("governance/public_task_queue.json")
+          queue = json.loads(queue_path.read_text(encoding="utf-8"))
+          completed = list(queue["completed_tasks"])
+          completed_marker = "DefensiveAutomation-S8_FaultInjectionAndAssistedSimulation_PASS"
+          if completed_marker not in completed:
+              completed.append(completed_marker)
+
+          queue["current_task"] = "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval"
+          queue["proposed_next_task"] = "DefensiveAutomation-S10_SingleAxisBoundedAutomation"
+          queue["completed_tasks"] = completed
+          queue["last_product_task"] = {
+              "task_id": "DefensiveAutomation-S8_FaultInjectionAndAssistedSimulation",
+              "status": "PASS",
+              "private_main_commit": "811dad6a6fc413920edbd5a7cdbd51cd4c394f0b",
+              "validated_private_candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
+              "public_ci_authority": "PUBLIC_GITHUB_ACTIONS",
+              "public_ci_run_id": 29582562734,
+              "public_ci_job_id": 87891541338,
+              "public_ci_result_marker": "governance/validation/results/s8_result.json",
+              "public_ci_workflow_revision": "S8_AST_SOURCE_SCAN_V3",
+              "public_ci_conclusion": "success",
+              "private_pr": 64,
+              "public_validation_pr": 18,
+              "scenario_count": 17,
+              "all_scenarios_contained": True,
+              "manual_review_recommended": True,
+              "s9_approval_granted": False,
+              "effective_activation_allowed": False,
+              "live_apply_performed": False
+          }
+          queue["automation_roadmap"]["completed_tasks"] = 14
+          queue["automation_roadmap"]["remaining_tasks"] = 8
+          queue["automation_roadmap"]["current_task"] = "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval"
+          queue["blocking_state"] = {
+              "status": "S9_MANUAL_POLICY_ENVELOPE_APPROVAL_REQUIRED",
+              "task_id": "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval",
+              "reason": "S8 evidence is ready for review, but no exact policy envelope or explicit human approval has been recorded.",
+              "safe_default": "RELOCKED_SHADOW",
+              "live_apply_performed": False
+          }
+          assert queue["safety"]["shadow_only"] is True
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
+          assert queue["operator_authorization"]["live_apply_authorized"] is False
+          queue_path.write_text(json.dumps(queue, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+      - name: Commit queue sync when changed
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/public_task_queue.json
+          if ! git diff --cached --quiet; then
+            git commit -m "roadmap: sync S8 closeout to S9 manual gate"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Verify synchronized boundary
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("governance/public_task_queue.json").read_text(encoding="utf-8"))
+          assert queue["current_task"] == "DefensiveAutomation-S9_LowestRiskOneShotBridgeAndPolicyEnvelopeApproval"
+          assert queue["proposed_next_task"] == "DefensiveAutomation-S10_SingleAxisBoundedAutomation"
+          assert queue["automation_roadmap"]["completed_tasks"] == 14
+          assert queue["automation_roadmap"]["remaining_tasks"] == 8
+          assert queue["last_product_task"]["s9_approval_granted"] is False
+          assert queue["safety"]["effective"] is False
+          assert queue["safety"]["execution_allowed"] is False
