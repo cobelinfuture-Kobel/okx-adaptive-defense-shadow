@@ -1,0 +1,8 @@
+{
+  "task": "DefensiveAutomation-S9",
+  "candidate": "246b3e888cf1a069e709ab563fc5c2dff1b8dc6d",
+  "private_pr": 65,
+  "approval_scope": "S10_SHADOW_CONSTRUCTION_AND_VALIDATION_ONLY",
+  "live_apply_authorized": false,
+  "execution_allowed": false
+}
