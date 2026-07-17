@@ -1,0 +1,180 @@
+name: DefensiveAutomation S8 Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s8-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-s8-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PRIVATE_CANDIDATE_SHA: c34e81e43750e49b4faa4d49148b44b8caca3769
+
+    steps:
+      - name: Checkout Public validation source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          data = json.loads(Path("governance/validation/s8_candidate.json").read_text(encoding="utf-8"))
+          assert data == {
+              "task": "S8",
+              "candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
+          }
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Provision isolated test dependencies
+        id: provision
+        continue-on-error: true
+        working-directory: _private
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest fastapi pandas python-dotenv httpx uvicorn pyyaml requests websockets
+
+      - name: Validate S8 source boundary
+        id: source
+        continue-on-error: true
+        working-directory: _private
+        shell: python
+        run: |
+          from pathlib import Path
+          import adaptive_defense.fault_injection_assisted_simulation as module
+          path = Path("adaptive_defense/fault_injection_assisted_simulation.py")
+          assert module.CAMPAIGN_MODE == "BOUNDED_FAULT_INJECTION_ASSISTED_SIMULATION_SHADOW_ONLY"
+          assert len(module.REQUIRED_SCENARIOS) == 17
+          assert len(set(module.REQUIRED_SCENARIOS)) == 17
+          assert module.SAFETY["shadow_only"] is True
+          assert module.SAFETY["effective"] is False
+          assert module.SAFETY["execution_allowed"] is False
+          assert module.SAFETY["s9_policy_envelope_approved"] is False
+          assert module.SAFETY["runtime_mutation_allowed"] is False
+          raw = path.read_text(encoding="utf-8")
+          for forbidden in ("requests.", "httpx.", "websockets.", "place_order", "cancel_order", "move_order"):
+              assert forbidden not in raw
+
+      - name: Run S7 and S8 focused regression
+        id: tests
+        continue-on-error: true
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python -m pytest -q \
+            tests/test_shadow_autopilot_full_chain.py \
+            tests/test_fault_injection_assisted_simulation.py \
+            tests/test_limited_effective_integration.py
+
+      - name: Verify queue remains S8 before closeout
+        id: queue
+        continue-on-error: true
+        working-directory: _private
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text(encoding="utf-8"))
+          control = json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text(encoding="utf-8"))
+          expected = "DefensiveAutomation-S8_FaultInjectionAndAssistedSimulation"
+          assert queue["current_task"] == control["current_task"] == expected
+          for state in (queue, control):
+              constraints = state["default_constraints"]
+              assert constraints["shadow_only"] is True
+              assert constraints["effective"] is False
+              assert constraints["execution_allowed"] is False
+
+      - name: Persist sanitized S8 result marker
+        if: always() && github.event_name == 'push'
+        shell: bash
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          SOURCE_OUTCOME: ${{ steps.source.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          outcomes = {
+              "manifest": os.environ["MANIFEST_OUTCOME"],
+              "private_checkout": os.environ["PRIVATE_CHECKOUT_OUTCOME"],
+              "provision": os.environ["PROVISION_OUTCOME"],
+              "source": os.environ["SOURCE_OUTCOME"],
+              "tests": os.environ["TESTS_OUTCOME"],
+              "queue": os.environ["QUEUE_OUTCOME"],
+          }
+          marker = {
+              "schema_version": "defensive_automation_s8_public_ci_result_v1",
+              "task_id": "DefensiveAutomation-S8",
+              "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
+              "immutable_private_candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
+              "step_outcomes": outcomes,
+              "workflow_revision": "S8_RESULT_MARKER_V1",
+              "shadow_only": True,
+              "effective": False,
+              "execution_allowed": False,
+              "s9_approval_granted": False,
+          }
+          path = Path("governance/validation/results/s8_result.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/s8_result.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record DefensiveAutomation S8 result"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Enforce final S8 result
+        if: always()
+        shell: bash
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          SOURCE_OUTCOME: ${{ steps.source.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+        run: |
+          for outcome in "$MANIFEST_OUTCOME" "$PRIVATE_CHECKOUT_OUTCOME" "$PROVISION_OUTCOME" "$SOURCE_OUTCOME" "$TESTS_OUTCOME" "$QUEUE_OUTCOME"; do
+            if [ "$outcome" != "success" ]; then
+              echo "DefensiveAutomation S8 immutable candidate: FAIL"
+              exit 1
+            fi
+          done
+          echo "DefensiveAutomation S8 immutable candidate: PASS"
+          echo "Private candidate: ${PRIVATE_CANDIDATE_SHA}"
+          echo "Assisted simulation: Shadow evidence only"
+          echo "S9 approval: NOT_GRANTED"
