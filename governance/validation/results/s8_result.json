@@ -1,0 +1,19 @@
+{
+  "effective": false,
+  "execution_allowed": false,
+  "immutable_private_candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
+  "s9_approval_granted": false,
+  "schema_version": "defensive_automation_s8_public_ci_result_v1",
+  "shadow_only": true,
+  "status": "FAIL",
+  "step_outcomes": {
+    "manifest": "success",
+    "private_checkout": "success",
+    "provision": "success",
+    "queue": "success",
+    "source": "failure",
+    "tests": "success"
+  },
+  "task_id": "DefensiveAutomation-S8",
+  "workflow_revision": "S8_RESULT_MARKER_V1"
+}
