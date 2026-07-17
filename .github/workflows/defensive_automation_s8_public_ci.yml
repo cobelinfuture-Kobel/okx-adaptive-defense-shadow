@@ -66,18 +66,28 @@ jobs:
         working-directory: _private
         shell: python
         run: |
+          import ast
           from pathlib import Path
-          import adaptive_defense.fault_injection_assisted_simulation as module
           path = Path("adaptive_defense/fault_injection_assisted_simulation.py")
-          assert module.CAMPAIGN_MODE == "BOUNDED_FAULT_INJECTION_ASSISTED_SIMULATION_SHADOW_ONLY"
-          assert len(module.REQUIRED_SCENARIOS) == 17
-          assert len(set(module.REQUIRED_SCENARIOS)) == 17
-          assert module.SAFETY["shadow_only"] is True
-          assert module.SAFETY["effective"] is False
-          assert module.SAFETY["execution_allowed"] is False
-          assert module.SAFETY["s9_policy_envelope_approved"] is False
-          assert module.SAFETY["runtime_mutation_allowed"] is False
           raw = path.read_text(encoding="utf-8")
+          tree = ast.parse(raw)
+          assignments = {}
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                  try:
+                      assignments[node.targets[0].id] = ast.literal_eval(node.value)
+                  except (ValueError, TypeError):
+                      pass
+          assert assignments["CAMPAIGN_MODE"] == "BOUNDED_FAULT_INJECTION_ASSISTED_SIMULATION_SHADOW_ONLY"
+          scenarios = assignments["REQUIRED_SCENARIOS"]
+          assert len(scenarios) == 17
+          assert len(set(scenarios)) == 17
+          safety = assignments["SAFETY"]
+          assert safety["shadow_only"] is True
+          assert safety["effective"] is False
+          assert safety["execution_allowed"] is False
+          assert safety["s9_policy_envelope_approved"] is False
+          assert safety["runtime_mutation_allowed"] is False
           for forbidden in ("requests.", "httpx.", "websockets.", "place_order", "cancel_order", "move_order"):
               assert forbidden not in raw
 
@@ -140,7 +150,7 @@ jobs:
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
               "immutable_private_candidate": "c34e81e43750e49b4faa4d49148b44b8caca3769",
               "step_outcomes": outcomes,
-              "workflow_revision": "S8_RESULT_MARKER_V2",
+              "workflow_revision": "S8_AST_SOURCE_SCAN_V3",
               "shadow_only": True,
               "effective": False,
               "execution_allowed": False,
