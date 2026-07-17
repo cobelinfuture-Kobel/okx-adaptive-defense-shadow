@@ -1,0 +1,242 @@
+name: DefensiveAutomation S15 Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-automation/s15-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-s15-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PRIVATE_CANDIDATE_SHA: c27473e14416d3424617f9e9b851da7bf3539198
+
+    steps:
+      - name: Checkout Public validation source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          data = json.loads(Path("governance/validation/s15_candidate.json").read_text(encoding="utf-8"))
+          assert data == {
+              "task": "DefensiveAutomation-S15",
+              "candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
+              "private_pr": 71,
+              "validation_scope": "FINITE_SIX_SCENARIO_UNATTENDED_SHADOW_QA_ONLY",
+              "background_loop_allowed": False,
+              "automatic_clear_allowed": False,
+              "runtime_access_allowed": False,
+              "live_apply_authorized": False,
+              "execution_allowed": False,
+          }
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Provision isolated test dependency
+        id: provision
+        continue-on-error: true
+        run: python -m pip install pytest
+
+      - name: Validate S15 source boundary
+        id: source
+        continue-on-error: true
+        working-directory: _private
+        shell: python
+        run: |
+          import ast
+          from pathlib import Path
+          path = Path("adaptive_defense/unattended_defensive_automation_qa.py")
+          raw = path.read_text(encoding="utf-8")
+          tree = ast.parse(raw)
+          assignments = {}
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                  try:
+                      assignments[node.targets[0].id] = ast.literal_eval(node.value)
+                  except (ValueError, TypeError):
+                      pass
+          assert assignments["QA_MODE"] == "FINITE_SIX_SCENARIO_UNATTENDED_SHADOW_QA_NO_BACKGROUND_LOOP"
+          assert assignments["SCENARIO_ORDER"] == (
+              "NO_CHANGE_RELOCKED",
+              "SINGLE_WINNER_RELOCKED",
+              "KILL_SWITCH_TRIP_RELOCKED_LATCHED",
+              "PRIOR_LATCH_BLOCKS_AUTOMATED_RESUME",
+              "RELOCK_FAILURE_HARD_LOCKS",
+              "EVIDENCE_TAMPER_DENIES_PROGRESSION",
+          )
+          safety = assignments["SAFETY"]
+          assert safety["shadow_only"] is True
+          assert safety["effective"] is False
+          assert safety["execution_allowed"] is False
+          assert safety["runtime_access_allowed"] is False
+          assert safety["background_loop"] is False
+          assert safety["sleep_or_wait_allowed"] is False
+          assert safety["auto_loop"] is False
+          assert safety["unattended_runtime_operation_authorized"] is False
+          assert safety["automatic_clear_allowed"] is False
+          assert safety["automatic_resume_after_latch_allowed"] is False
+          assert safety["live_apply_authorized"] is False
+          for forbidden in ("requests.", "httpx.", "websockets.", "place_order", "cancel_order", "move_order", "subprocess.", "os.system", "time.sleep"):
+              assert forbidden not in raw
+
+      - name: Run S14 and S15 focused regression
+        id: tests
+        continue-on-error: true
+        working-directory: _private
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python -m pytest -q \
+            tests/test_evidence_audit_reconciliation.py \
+            tests/test_unattended_defensive_automation_qa.py
+
+      - name: Run actual finite unattended Shadow QA
+        id: campaign
+        continue-on-error: true
+        working-directory: _private
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          from adaptive_defense.unattended_defensive_automation_qa import (
+              build_default_unattended_qa_scenarios,
+              evaluate_unattended_defensive_automation_qa,
+          )
+          s14 = json.loads(Path("docs/roadmap/defensive_automation/s14/latest.json").read_text(encoding="utf-8"))
+          scenarios = build_default_unattended_qa_scenarios(s14)
+          result = evaluate_unattended_defensive_automation_qa(s14_evidence=s14, scenarios=scenarios)
+          assert result["qa_state"] == "UNATTENDED_SHADOW_QA_PASS_RELOCKED", result["denial_reasons"]
+          assert result["scenario_count"] == 6
+          assert result["terminal_parity_verified"] is True
+          assert result["digest_chain_verified"] is True
+          assert result["kill_switch_dominance_verified"] is True
+          assert result["manual_clear_only_verified"] is True
+          assert result["hard_lock_containment_verified"] is True
+          assert result["unexpected_progression_count"] == 0
+          assert result["s16_progression_recommended"] is True
+          assert result["unattended_operation_executed"] is False
+          assert result["background_loop"] is False
+          assert result["runtime_access_allowed"] is False
+          assert result["live_apply_authorized"] is False
+          assert result["execution_allowed"] is False
+          assert len(result["qa_campaign_digest"]) == 64
+
+      - name: Verify queues remain S15 before closeout
+        id: queue
+        continue-on-error: true
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          private = json.loads(Path("_private/docs/roadmap/task_queue.json").read_text(encoding="utf-8"))
+          public = json.loads(Path("governance/public_task_queue.json").read_text(encoding="utf-8"))
+          expected = "DefensiveAutomation-S15_UnattendedDefensiveAutomationQA"
+          assert private["current_task"] == public["current_task"] == expected
+          assert private["default_constraints"]["shadow_only"] is True
+          assert private["default_constraints"]["effective"] is False
+          assert private["default_constraints"]["execution_allowed"] is False
+          assert public["safety"]["shadow_only"] is True
+          assert public["safety"]["effective"] is False
+          assert public["safety"]["execution_allowed"] is False
+
+      - name: Persist sanitized S15 result marker
+        if: always() && github.event_name == 'push'
+        shell: bash
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          SOURCE_OUTCOME: ${{ steps.source.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          CAMPAIGN_OUTCOME: ${{ steps.campaign.outcome }}
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+        run: |
+          TARGET_BRANCH="${GITHUB_REF_NAME}"
+          git pull --rebase origin "${TARGET_BRANCH}"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          outcomes = {
+              "manifest": os.environ["MANIFEST_OUTCOME"],
+              "private_checkout": os.environ["PRIVATE_CHECKOUT_OUTCOME"],
+              "provision": os.environ["PROVISION_OUTCOME"],
+              "source": os.environ["SOURCE_OUTCOME"],
+              "tests": os.environ["TESTS_OUTCOME"],
+              "campaign": os.environ["CAMPAIGN_OUTCOME"],
+              "queue": os.environ["QUEUE_OUTCOME"],
+          }
+          marker = {
+              "schema_version": "defensive_automation_s15_public_ci_result_v1",
+              "task_id": "DefensiveAutomation-S15",
+              "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
+              "immutable_private_candidate": "c27473e14416d3424617f9e9b851da7bf3539198",
+              "step_outcomes": outcomes,
+              "workflow_revision": "S15_AST_SOURCE_SCAN_V1",
+              "required_scenario_count": 6,
+              "background_loop_allowed": False,
+              "automatic_clear_allowed": False,
+              "runtime_access_allowed": False,
+              "live_apply_authorized": False,
+              "execution_allowed": False,
+          }
+          path = Path("governance/validation/results/s15_result.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/s15_result.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record DefensiveAutomation S15 result"
+            git push origin "HEAD:${TARGET_BRANCH}"
+          fi
+
+      - name: Enforce final S15 result
+        if: always()
+        shell: bash
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          PROVISION_OUTCOME: ${{ steps.provision.outcome }}
+          SOURCE_OUTCOME: ${{ steps.source.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          CAMPAIGN_OUTCOME: ${{ steps.campaign.outcome }}
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+        run: |
+          for outcome in "$MANIFEST_OUTCOME" "$PRIVATE_CHECKOUT_OUTCOME" "$PROVISION_OUTCOME" "$SOURCE_OUTCOME" "$TESTS_OUTCOME" "$CAMPAIGN_OUTCOME" "$QUEUE_OUTCOME"; do
+            if [ "$outcome" != "success" ]; then
+              echo "DefensiveAutomation S15 immutable candidate: FAIL"
+              exit 1
+            fi
+          done
+          echo "DefensiveAutomation S15 immutable candidate: PASS"
+          echo "Scope: finite six-scenario unattended Shadow QA, no background loop"
+          echo "Automatic clear: FORBIDDEN"
+          echo "Live apply: NOT_AUTHORIZED"
