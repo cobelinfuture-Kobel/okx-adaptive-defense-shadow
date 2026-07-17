@@ -1,0 +1,20 @@
+{
+  "execution_allowed": false,
+  "immutable_private_candidate": "d426ff3b1d4f5a36b2363ec2fce3ff7c2f982800",
+  "live_apply_authorized": false,
+  "memory_adapter_only": true,
+  "one_cycle_only": true,
+  "s9_exact_envelope_enforced": true,
+  "schema_version": "defensive_automation_s10_public_ci_result_v1",
+  "status": "FAIL",
+  "step_outcomes": {
+    "manifest": "success",
+    "private_checkout": "success",
+    "provision": "success",
+    "queue": "success",
+    "source": "success",
+    "tests": "failure"
+  },
+  "task_id": "DefensiveAutomation-S10",
+  "workflow_revision": "S10_AST_SOURCE_SCAN_V1"
+}
