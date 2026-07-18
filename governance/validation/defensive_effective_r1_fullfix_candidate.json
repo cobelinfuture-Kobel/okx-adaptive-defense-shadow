@@ -1,0 +1,25 @@
+{
+  "schema_version": "defensive_effective_r1_fullfix_public_candidate_v1",
+  "task_id": "DefensiveEffective-R1_ReadbackSurfaceAndTimingDispositionFullFix",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_candidate_sha": "659d5bfd92a61e4d46f226dab483b00147c04f53",
+  "private_pr": 75,
+  "scope": "READONLY_READBACK_SURFACE_AND_TIMING_DISPOSITION_FULLFIX",
+  "expected_features": [
+    "transport status latency response digest and schema paths",
+    "no raw runtime value persistence",
+    "expected versus observed S2 catalogs",
+    "parameter surface missing versus drift",
+    "tri-state safety evidence",
+    "request-anchored snapshot timing",
+    "identity stability independent from timing"
+  ],
+  "runtime_access": true,
+  "runtime_mutation": false,
+  "runtime_reload": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "effective_readiness": "NOT_READY"
+}
