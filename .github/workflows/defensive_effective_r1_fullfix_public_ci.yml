@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: a63fea45e862f8f8e2d6ae5779a831b39cd7c465
+      PRIVATE_CANDIDATE_SHA: c9de4bf524d35fb61ab897d9b3763010a0c1a845
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,12 +34,12 @@ jobs:
           data = json.loads(Path(
               "governance/validation/defensive_effective_r1_fullfix_candidate.json"
           ).read_text())
-          assert data["private_candidate_sha"] == "a63fea45e862f8f8e2d6ae5779a831b39cd7c465"
-          assert data["private_pr"] == 76
+          assert data["private_candidate_sha"] == "c9de4bf524d35fb61ab897d9b3763010a0c1a845"
+          assert data["private_pr"] == 77
           assert data["scope"] == (
               "READONLY_READBACK_SURFACE_AND_TIMING_DISPOSITION_FULLFIX"
           )
-          assert len(data["expected_features"]) == 8
+          assert len(data["expected_features"]) == 9
           assert data["runtime_access"] is True
           assert not any(data[key] for key in (
               "runtime_mutation", "runtime_reload", "live_apply", "execution",
@@ -150,7 +150,7 @@ jobs:
                   value == "success" for value in outcomes.values()
               ) else "FAIL",
               "immutable_private_candidate":
-                  "a63fea45e862f8f8e2d6ae5779a831b39cd7c465",
+                  "c9de4bf524d35fb61ab897d9b3763010a0c1a845",
               "step_outcomes": outcomes,
               "local_runtime_rerun": "PENDING",
               "runtime_proof": "NOT_CLAIMED",

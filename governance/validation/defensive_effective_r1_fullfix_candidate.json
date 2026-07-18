@@ -2,8 +2,8 @@
   "schema_version": "defensive_effective_r1_fullfix_public_candidate_v1",
   "task_id": "DefensiveEffective-R1_ReadbackSurfaceAndTimingDispositionFullFix",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
-  "private_candidate_sha": "a63fea45e862f8f8e2d6ae5779a831b39cd7c465",
-  "private_pr": 76,
+  "private_candidate_sha": "c9de4bf524d35fb61ab897d9b3763010a0c1a845",
+  "private_pr": 77,
   "scope": "READONLY_READBACK_SURFACE_AND_TIMING_DISPOSITION_FULLFIX",
   "expected_features": [
     "transport status latency response digest and schema paths",
@@ -13,7 +13,8 @@
     "tri-state safety evidence",
     "request-anchored snapshot timing",
     "identity stability independent from timing",
-    "Windows PowerShell 5.1 array normalization"
+    "Windows PowerShell 5.1 array normalization",
+    "Windows PowerShell 5.1 safety contract enumeration"
   ],
   "runtime_access": true,
   "runtime_mutation": false,
