@@ -1,0 +1,11 @@
+{
+  "task": "DefensiveEffective-R0",
+  "candidate": "0713b116043235aaaa6f8d740526854e8cb95c4e",
+  "private_pr": 73,
+  "scope": "READONLY_CURRENT_RUNTIME_READBACK_CONTRACT_DESIGNSCAN",
+  "contract_path": "docs/roadmap/defensive_effective/r0/current_runtime_readback_contract.json",
+  "closeout_path": "docs/roadmap/defensive_effective/r0/latest.json",
+  "runtime": false,
+  "live": false,
+  "execution": false
+}
