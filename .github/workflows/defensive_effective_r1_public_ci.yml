@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: \${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.head_ref || github.ref_name }}
           persist-credentials: true
 
       - name: Validate candidate manifest
@@ -52,8 +52,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cobelinfuture-Kobel/okx_bot_private
-          ref: \${{ env.PRIVATE_CANDIDATE_SHA }}
-          token: \${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
           path: _private
           persist-credentials: false
           fetch-depth: 1
@@ -92,11 +92,11 @@ jobs:
       - name: Persist R1 result marker
         if: always() && github.event_name == 'push'
         env:
-          MANIFEST_OUTCOME: \${{ steps.manifest.outcome }}
-          PRIVATE_CHECKOUT_OUTCOME: \${{ steps.private_checkout.outcome }}
-          VALIDATION_OUTCOME: \${{ steps.validation.outcome }}
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
         run: |
-          git pull --rebase origin "\${GITHUB_REF_NAME}"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
           python - <<'PY'
           import json, os
           from pathlib import Path
@@ -134,15 +134,15 @@ jobs:
           git add governance/validation/results/defensive_effective_r1_result.json
           if ! git diff --cached --quiet; then
             git commit -m "ci: record DefensiveEffective R1 result"
-            git push origin "HEAD:\${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
       - name: Enforce final result
         if: always()
         env:
-          MANIFEST_OUTCOME: \${{ steps.manifest.outcome }}
-          PRIVATE_CHECKOUT_OUTCOME: \${{ steps.private_checkout.outcome }}
-          VALIDATION_OUTCOME: \${{ steps.validation.outcome }}
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
         run: |
           test "$MANIFEST_OUTCOME" = success
           test "$PRIVATE_CHECKOUT_OUTCOME" = success
