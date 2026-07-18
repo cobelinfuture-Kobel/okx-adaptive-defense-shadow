@@ -5,8 +5,8 @@
   "task_order_source": "operator-approved DefensiveAutomation P0-P4 and S0-S16 ordered roadmap",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "public_repository": "cobelinfuture-Kobel/okx-adaptive-defense-shadow",
-  "current_task": "DefensiveAutomation-V1_CLOSED_SHADOW_ONLY",
-  "proposed_next_task": null,
+  "current_task": "DefensiveEffective-R0_COMPLETE_LIVE_LOCKED",
+  "proposed_next_task": "DefensiveEffective-R1_CurrentRuntimeReadbackReadonlyCollector",
   "completed_tasks": [
     "OKX-GOV-PublicCI-S0_PublicPrivatePromotionContract_DesignScan_PASS",
     "OKX-GOV-PublicCI-S1_PublicPrivateBootstrap_FullFix_PASS",
@@ -48,7 +48,8 @@
     "DefensiveAutomation-S13_CircuitBreakerAndAutomaticRelock_PASS",
     "DefensiveAutomation-S14_EvidenceAuditAndReconciliation_PASS",
     "DefensiveAutomation-S15_UnattendedDefensiveAutomationQA_PASS",
-    "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout_PASS"
+    "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout_PASS",
+    "DefensiveEffective-R0_CurrentRuntimeReadbackContract_DesignScan_PASS"
   ],
   "execution_policy": {
     "primary_executor": "github_actions",
@@ -111,28 +112,20 @@
     "Order Movement"
   ],
   "last_product_task": {
-    "task_id": "DefensiveAutomation-S16_BoundedDefensiveAutomationV1Closeout",
-    "status": "PASS_CLOSED_SHADOW_ONLY_LIVE_LOCKED",
-    "private_main_commit": "3a6f8a4ba7d032311bfa3ba444e1f7f0d4f0f63c",
-    "validated_private_candidate": "8222439734a2f0841597eb4b11d3e4de1ccf551c",
-    "private_pr": 72,
-    "public_validation_pr": 26,
-    "public_ci_result_marker": "governance/validation/results/s16_result.json",
-    "public_ci_reconciliation_marker": "governance/validation/results/s16_reconciliation.json",
-    "public_ci_result_marker_commit": "c1b30ced6cdb302ee99e1b17e6fc08883b0acd0d",
-    "public_ci_workflow_revision": "S16_READONLY_CLOSEOUT_V1",
-    "stage_count": 16,
-    "required_marker_count": 22,
-    "closeout_digest": "7485eeccc70ee3b3c7ae2055e5f5f4d914cb3d7d7fb95dc248f469004c0c306f",
-    "bounded_defensive_automation_v1_evidence_complete": true,
-    "live_effective_ready": false,
+    "task_id": "DefensiveEffective-R0_CurrentRuntimeReadbackContract_DesignScan",
+    "status": "PASS_CONTRACT_FROZEN_LIVE_LOCKED",
+    "private_main_commit": "da807bb32d3e78a2dc02f91afeb80cb7a5320d4b",
+    "validated_private_candidate": "0713b116043235aaaa6f8d740526854e8cb95c4e",
+    "private_pr": 73,
+    "public_validation_pr": 27,
+    "public_ci_result_marker": "governance/validation/results/defensive_effective_r0_result.json",
+    "public_ci_workflow_revision": "DE_R0_READONLY_CONTRACT_V1",
+    "current_process_identity_proof_available": false,
     "runtime_proof": "NOT_CLAIMED",
     "effective_readiness": "NOT_READY",
-    "separate_final_action_approval_required": true,
-    "runtime_access_allowed": false,
+    "runtime_access_performed": false,
     "live_apply_authorized": false,
-    "execution_allowed": false,
-    "runtime_mutation_allowed": false
+    "execution_allowed": false
   },
   "last_runtime_recovery": {
     "task_id": "RuntimeRecovery-S0_StabilityGateTransient_FullFix_EndToEndRetry2",
@@ -157,9 +150,9 @@
     "separate_final_action_approval_required": true
   },
   "blocking_state": {
-    "status": "BOUNDED_DEFENSIVE_AUTOMATION_V1_EVIDENCE_COMPLETE_LIVE_APPLY_BLOCKED",
-    "task_id": "DefensiveAutomation-V1",
-    "reason": "The 22-of-22 Shadow evidence roadmap is closed. Current runtime proof, final action approval and Live Effective activation remain absent.",
+    "status": "R1_CURRENT_RUNTIME_READBACK_REQUIRED_LIVE_APPLY_BLOCKED",
+    "task_id": "DefensiveEffective-R1_CurrentRuntimeReadbackReadonlyCollector",
+    "reason": "R0 froze the readonly evidence contract; current process identity and parameter readback have not been collected.",
     "safe_default": "RELOCKED_SHADOW",
     "live_apply_performed": false
   },
@@ -185,6 +178,15 @@
     "private_trigger_mode": "workflow_dispatch_only",
     "automated_ci_authority": "cobelinfuture-Kobel/okx-adaptive-defense-shadow"
   },
-  "roadmap_status": "CLOSED_SHADOW_ONLY_LIVE_LOCKED",
-  "next_approved_task": null
+  "roadmap_status": "POST_V1_EFFECTIVE_BRIDGE_R0_COMPLETE_LIVE_LOCKED",
+  "next_approved_task": null,
+  "post_v1_effective_bridge": {
+    "track_id": "DEFENSIVE_EFFECTIVE_BRIDGE",
+    "completed_tasks": 1,
+    "current_state": "R0_COMPLETE_LIVE_LOCKED",
+    "proposed_next_task": "DefensiveEffective-R1_CurrentRuntimeReadbackReadonlyCollector",
+    "next_task_approved": false,
+    "overall_progress_percent": 58,
+    "distance_to_goal_percent": 42
+  }
 }
