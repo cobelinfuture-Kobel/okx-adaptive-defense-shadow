@@ -116,7 +116,7 @@ jobs:
           assert queue["default_constraints"]["live_apply_authorized"] is False
           assert queue["default_constraints"]["auto_continue"] is False
           assert latest["status"] == (
-              "FULLFIX_IMPLEMENTED_PUBLIC_CI_AND_LOCAL_RERUN_PENDING"
+              "FULLFIX_PUBLIC_CI_PASS_LOCAL_READONLY_RERUN_PENDING"
           )
           assert latest["validation"]["current_runtime_proof_available"] is False
           assert latest["safety"]["runtime_proof"] == "NOT_CLAIMED"
