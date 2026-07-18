@@ -63,7 +63,20 @@ jobs:
         continue-on-error: true
         working-directory: _private
         run: |
-          python -m pytest tests/test_collect_defensive_effective_r1_readonly_script.py -q
+          python - <<'PY'
+          import runpy
+          namespace = runpy.run_path(
+              "tests/test_collect_defensive_effective_r1_readonly_script.py"
+          )
+          tests = sorted(
+              (name, value) for name, value in namespace.items()
+              if name.startswith("test_") and callable(value)
+          )
+          assert tests
+          for name, test in tests:
+              test()
+              print(f"PASS {name}")
+          PY
           python - <<'PY'
           import json
           from pathlib import Path
