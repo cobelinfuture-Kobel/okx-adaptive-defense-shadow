@@ -1,16 +1,16 @@
 {
   "effective_readiness": "NOT_READY",
   "execution": false,
-  "immutable_private_candidate": "a63fea45e862f8f8e2d6ae5779a831b39cd7c465",
+  "immutable_private_candidate": "c9de4bf524d35fb61ab897d9b3763010a0c1a845",
   "live": false,
   "local_runtime_rerun": "PENDING",
   "runtime_mutation": false,
   "runtime_proof": "NOT_CLAIMED",
   "runtime_reload": false,
   "schema_version": "defensive_effective_r1_fullfix_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
-    "manifest": "failure",
+    "manifest": "success",
     "powershell_parse": "success",
     "private_checkout": "success",
     "validation": "success"
