@@ -8,11 +8,11 @@
   "runtime_proof": "NOT_CLAIMED",
   "runtime_reload": false,
   "schema_version": "defensive_effective_r1_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
     "manifest": "success",
     "private_checkout": "success",
-    "validation": "failure"
+    "validation": "success"
   },
   "task_id": "DefensiveEffective-R1",
   "workflow_revision": "DE_R1_READONLY_COLLECTOR_V1"
