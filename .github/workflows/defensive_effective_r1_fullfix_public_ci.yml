@@ -1,0 +1,189 @@
+name: DefensiveEffective R1 FullFix Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-effective/r1-fullfix-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-r1-fullfix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIVATE_CANDIDATE_SHA: 659d5bfd92a61e4d46f226dab483b00147c04f53
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path(
+              "governance/validation/defensive_effective_r1_fullfix_candidate.json"
+          ).read_text())
+          assert data["private_candidate_sha"] == "659d5bfd92a61e4d46f226dab483b00147c04f53"
+          assert data["private_pr"] == 75
+          assert data["scope"] == (
+              "READONLY_READBACK_SURFACE_AND_TIMING_DISPOSITION_FULLFIX"
+          )
+          assert len(data["expected_features"]) == 7
+          assert data["runtime_access"] is True
+          assert not any(data[key] for key in (
+              "runtime_mutation", "runtime_reload", "live_apply", "execution",
+              "order_actions",
+          ))
+          assert data["runtime_proof"] == "NOT_CLAIMED"
+          assert data["effective_readiness"] == "NOT_READY"
+          PY
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Parse PowerShell collector
+        id: powershell_parse
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "_private/tools/collect_defensive_effective_r1_readonly.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
+          Write-Host "PASS PowerShell parser"
+
+      - name: Validate R1 FullFix source contract
+        id: validation
+        continue-on-error: true
+        working-directory: _private
+        run: |
+          python - <<'PY'
+          import runpy
+          namespace = runpy.run_path(
+              "tests/test_collect_defensive_effective_r1_readonly_script.py"
+          )
+          tests = sorted(
+              (name, value) for name, value in namespace.items()
+              if name.startswith("test_") and callable(value)
+          )
+          assert tests
+          for name, test in tests:
+              test()
+              print(f"PASS {name}")
+          PY
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text())
+          control = json.loads(
+              Path("docs/roadmap/task_queue_parts/control_state.json").read_text()
+          )
+          latest = json.loads(
+              Path("docs/roadmap/defensive_effective/r1/latest.json").read_text()
+          )
+          task = "DefensiveEffective-R1_ReadbackSurfaceAndTimingDispositionFullFix"
+          assert queue["current_task"] == task == control["current_task"]
+          assert queue["in_progress_tasks"] == [task]
+          assert control["in_progress_tasks"] == [task]
+          assert queue["default_constraints"]["runtime_mutation_allowed"] is False
+          assert queue["default_constraints"]["live_apply_authorized"] is False
+          assert queue["default_constraints"]["auto_continue"] is False
+          assert latest["status"] == (
+              "FULLFIX_IMPLEMENTED_PUBLIC_CI_AND_LOCAL_RERUN_PENDING"
+          )
+          assert latest["validation"]["current_runtime_proof_available"] is False
+          assert latest["safety"]["runtime_proof"] == "NOT_CLAIMED"
+          assert latest["safety"]["effective_readiness"] == "NOT_READY"
+          PY
+
+      - name: Persist R1 FullFix result marker
+        if: always() && github.event_name == 'push'
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          POWERSHELL_PARSE_OUTCOME: ${{ steps.powershell_parse.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
+        run: |
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          outcomes = {
+              "manifest": os.environ["MANIFEST_OUTCOME"],
+              "private_checkout": os.environ["PRIVATE_CHECKOUT_OUTCOME"],
+              "powershell_parse": os.environ["POWERSHELL_PARSE_OUTCOME"],
+              "validation": os.environ["VALIDATION_OUTCOME"],
+          }
+          marker = {
+              "schema_version":
+                  "defensive_effective_r1_fullfix_public_ci_result_v1",
+              "task_id":
+                  "DefensiveEffective-R1_ReadbackSurfaceAndTimingDispositionFullFix",
+              "status": "PASS" if all(
+                  value == "success" for value in outcomes.values()
+              ) else "FAIL",
+              "immutable_private_candidate":
+                  "659d5bfd92a61e4d46f226dab483b00147c04f53",
+              "step_outcomes": outcomes,
+              "local_runtime_rerun": "PENDING",
+              "runtime_proof": "NOT_CLAIMED",
+              "effective_readiness": "NOT_READY",
+              "runtime_mutation": False,
+              "runtime_reload": False,
+              "live": False,
+              "execution": False,
+          }
+          path = Path(
+              "governance/validation/results/"
+              "defensive_effective_r1_fullfix_result.json"
+          )
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/defensive_effective_r1_fullfix_result.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record DefensiveEffective R1 FullFix result"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Enforce final result
+        if: always()
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          POWERSHELL_PARSE_OUTCOME: ${{ steps.powershell_parse.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
+        run: |
+          test "$MANIFEST_OUTCOME" = success
+          test "$PRIVATE_CHECKOUT_OUTCOME" = success
+          test "$POWERSHELL_PARSE_OUTCOME" = success
+          test "$VALIDATION_OUTCOME" = success
