@@ -1,0 +1,20 @@
+{
+  "schema_version": "defensive_effective_r1_public_candidate_v1",
+  "task_id": "DefensiveEffective-R1_CurrentRuntimeReadbackReadonlyCollector",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_candidate_sha": "60e72845946fbb3eb0e166d8669453b692e88702",
+  "private_pr": 74,
+  "scope": "READONLY_CURRENT_RUNTIME_TWO_SNAPSHOT_COLLECTOR",
+  "runtime_access": true,
+  "runtime_mutation": false,
+  "runtime_reload": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "expected_terminal_states": [
+    "CURRENT_RUNTIME_READBACK_VERIFIED_NO_APPLY",
+    "CURRENT_RUNTIME_READBACK_DENIED_RELOCKED"
+  ],
+  "runtime_proof": "NOT_CLAIMED",
+  "effective_readiness": "NOT_READY"
+}
