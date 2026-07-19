@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: d4ad1fb9afd7d32e4f7cb7554333c0ee70fe59be
+      PRIVATE_CANDIDATE_SHA: dc6a6bb163e97d13b03c02440555f0888d76f1c1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,8 +30,8 @@ jobs:
           import json
           from pathlib import Path
           data = json.loads(Path("governance/validation/global_integration_s3_candidate.json").read_text())
-          assert data["private_candidate_sha"] == "d4ad1fb9afd7d32e4f7cb7554333c0ee70fe59be"
-          assert data["private_pr"] == 93
+          assert data["private_candidate_sha"] == "dc6a6bb163e97d13b03c02440555f0888d76f1c1"
+          assert data["private_pr"] == 94
           assert len(data["expected_features"]) == 6
           assert not any(data[key] for key in (
               "production_process_replacement", "runtime_parameter_mutation",
@@ -61,7 +61,8 @@ jobs:
             adaptive_defense/r1_runtime_readback.py \
             tests/test_five_axis_runtime_publisher.py \
             tests/test_canonical_signal_eligibility.py \
-            tests/test_r1_runtime_readback.py
+            tests/test_r1_runtime_readback.py \
+            tests/test_s3_authoritative_publisher_prime.py
 
       - name: Run focused existing-lineage regressions
         working-directory: _private
@@ -73,6 +74,7 @@ jobs:
               "tests/test_five_axis_runtime_publisher.py",
               "tests/test_canonical_signal_eligibility.py",
               "tests/test_r1_runtime_readback.py",
+              "tests/test_s3_authoritative_publisher_prime.py",
           ):
               namespace = runpy.run_path(path)
               tests = sorted((name, value) for name, value in namespace.items() if name.startswith("test_") and callable(value))
@@ -103,25 +105,17 @@ jobs:
           assert queue["default_constraints"]["live_apply_authorized"] is False
           assert queue["default_constraints"]["production_process_restart_allowed"] is False
           assert queue["default_constraints"]["isolated_canary_process_allowed"] is True
-          assert progress["status"] == "FIRST_MINIPC_RUN_DENIED_SAFE_DIAGNOSTIC_FULLFIX_PUBLIC_CI_PENDING"
+          assert progress["status"] == "PUBLISHER_ROOT_CAUSE_FULLFIX_MERGED_PUBLIC_CI_PASS_MINIPC_RERUN_REQUIRED"
           assert progress["design"]["production_python_modules_added"] == 0
           assert progress["design"]["canary_background_runtime_enabled"] is False
           assert progress["design"]["server_lifespan_enabled"] is False
           assert progress["safety"]["runtime_proof"] == "NOT_CLAIMED"
 
-          package = Path("adaptive_defense/five_axis_control_plan_shadow_builder/__init__.py").read_text()
-          legacy = Path("adaptive_defense/five_axis_control_plan_shadow_builder.py").read_text()
-          assert "except OSError as exc:" in package
-          assert "artifact persistence failed after authoritative runtime publish" in package
-          assert "LOGGER = logging.getLogger(__name__)" in package
-          assert "artifact persistence failed after authoritative runtime publish" not in legacy
-          assert "_five_axis_control_plan_shadow_builder_impl" not in package
-          assert "_five_axis_control_plan_shadow_builder_impl" not in legacy
-
-          regression = Path("tests/test_five_axis_runtime_publisher.py").read_text()
-          assert "simulated Windows sharing violation" in regression
-          assert "unittest.mock import patch" in regression
-          assert 'canonical["signal_eligibility_state"] == "ELIGIBLE_SHADOW_INPUT"' in regression
+          runtime = Path("runtime.py").read_text()
+          loop_start = runtime.index("async def _strategy_intelligence_loop")
+          loop_end = runtime.index("await asyncio.sleep(20)", loop_start)
+          loop_source = runtime[loop_start:loop_end]
+          assert loop_source.index("refresh_strategy_intelligence()") < loop_source.index("refresh_v11_policy_diagnostics()")
 
           runner = Path("tools/run_global_integration_s3_getonlyqa.ps1").read_text()
           assert "CreateEvidenceBundle" not in runner
@@ -129,9 +123,15 @@ jobs:
           assert 'lifespan="off"' in runner
           assert "OKX_WS_LOGIN_ONLY" in runner
           assert "OKX_ENABLE_TEST_LIFESPAN_RUNTIME" in runner
+          assert "refresh_v11_policy_diagnostics(force=True)" in runner
+          assert runner.index("refresh_strategy_intelligence()") < runner.index("refresh_v11_policy_diagnostics(force=True)")
           assert "S3_SIGNAL_SAFETY_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED" in runner
           assert runner.index('snapshot_1.json') < runner.index("Assert-ReadbackSurface -Data $snapshot1")
           assert "readback_diagnostics = $readbackDiagnostics" in runner
+
+          regression = Path("tests/test_s3_authoritative_publisher_prime.py").read_text()
+          assert "test_production_runtime_calls_authoritative_v11_publisher_after_strategy_refresh" in regression
+          assert "test_s3_canary_primes_same_authoritative_publisher_without_background_runtime" in regression
           PY
 
       - name: Persist S3 result marker
@@ -144,9 +144,9 @@ jobs:
           marker = {
               "schema_version": "global_integration_s3_public_ci_result_v1",
               "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-              "validation_scope": "authoritative_package_publisher_artifact_starvation_fullfix",
+              "validation_scope": "authoritative_publisher_prime_sequence_fullfix",
               "status": "PASS",
-              "immutable_private_candidate": "d4ad1fb9afd7d32e4f7cb7554333c0ee70fe59be",
+              "immutable_private_candidate": "dc6a6bb163e97d13b03c02440555f0888d76f1c1",
               "compile": "PASS",
               "focused_tests": "PASS",
               "governance": "PASS",
@@ -168,6 +168,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add governance/validation/results/global_integration_s3_result.json
           if ! git diff --cached --quiet; then
-            git commit -m "ci: record final authoritative S3 publisher validation"
+            git commit -m "ci: record S3 authoritative publisher prime validation"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
