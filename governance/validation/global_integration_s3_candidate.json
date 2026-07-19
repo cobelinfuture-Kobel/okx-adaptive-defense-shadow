@@ -1,15 +1,15 @@
 {
   "schema_version": "global_integration_s3_public_ci_candidate_v1",
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "private_candidate_sha": "d4ad1fb9afd7d32e4f7cb7554333c0ee70fe59be",
-  "private_pr": 93,
+  "private_candidate_sha": "dc6a6bb163e97d13b03c02440555f0888d76f1c1",
+  "private_pr": 94,
   "expected_features": [
-    "authoritative five-axis package publisher repaired in place",
-    "RuntimeStatus report survives secondary artifact OSError",
-    "canonical AppState publisher remains on the existing SyncService lineage",
-    "fixture-free PermissionError regression produces the exact five canonical signals",
-    "same-name legacy module is unchanged and no parallel production module is added",
-    "existing S3 GET-only runner remains unchanged and runtime proof is not claimed"
+    "existing S3 fresh-process runner reused without a parallel runner",
+    "canary mirrors the production strategy-intelligence then V11 publisher sequence",
+    "existing five-axis and canonical AppState publishers are invoked explicitly",
+    "BackgroundRuntime and server lifespan remain disabled",
+    "focused regression locks production and canary invocation parity",
+    "runtime proof remains unclaimed until MiniPC GET-only acceptance"
   ],
   "production_process_replacement": false,
   "runtime_parameter_mutation": false,
