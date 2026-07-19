@@ -9,7 +9,7 @@
   "schema_version": "defensive_effective_r1a_public_ci_result_v1",
   "status": "FAIL",
   "step_outcomes": {
-    "manifest": "success",
+    "manifest": "failure",
     "powershell_parse": "success",
     "private_checkout": "success",
     "validation": "failure"
