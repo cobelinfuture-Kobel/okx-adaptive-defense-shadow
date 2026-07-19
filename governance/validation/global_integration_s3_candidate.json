@@ -1,0 +1,22 @@
+{
+  "schema_version": "global_integration_s3_public_ci_candidate_v1",
+  "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
+  "private_candidate_sha": "ab9b5c64ff8ee7614691ef19e62918b28fe23df5",
+  "private_pr": 89,
+  "expected_features": [
+    "one PowerShell orchestration runner and zero production Python modules",
+    "existing connector GET methods only for runtime priming",
+    "existing SyncService signal and safety publishers reused",
+    "BackgroundRuntime WebSocket lifespan and autonomous loops disabled",
+    "two exact GET-only R1 snapshots",
+    "production listener identity preserved and canary stop cleanup"
+  ],
+  "production_process_replacement": false,
+  "runtime_parameter_mutation": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "evidence_bundle": false,
+  "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
+  "effective_readiness": "NOT_READY"
+}

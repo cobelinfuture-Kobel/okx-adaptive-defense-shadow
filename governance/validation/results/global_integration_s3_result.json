@@ -1,0 +1,22 @@
+{
+  "effective_readiness": "NOT_READY",
+  "evidence_bundle": false,
+  "execution": false,
+  "immutable_private_candidate": "ab9b5c64ff8ee7614691ef19e62918b28fe23df5",
+  "live": false,
+  "order_actions": false,
+  "production_process_replacement": false,
+  "production_python_modules_added": 0,
+  "runtime_parameter_mutation": false,
+  "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
+  "schema_version": "global_integration_s3_public_ci_result_v1",
+  "status": "PASS",
+  "step_outcomes": {
+    "compile": "success",
+    "focused_tests": "success",
+    "governance": "success",
+    "manifest": "success",
+    "private_checkout": "success"
+  },
+  "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA"
+}
