@@ -1,0 +1,24 @@
+{
+  "schema_version": "defensive_effective_r1a_public_candidate_v1",
+  "task_id": "DefensiveEffective-R1A_DedicatedReadbackSurfaceProvisioningAndRuntimeLatencyDisposition",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_candidate_sha": "50f068a26ea873476e2ee3f72d26eb82691ca278",
+  "private_pr": 78,
+  "evidence_zip_sha256": "cd801ac41478a7949ef7fe5db92458fdff7bc9a68e207be9dd129dd341e91395",
+  "scope": "BOUNDED_GET_ONLY_READBACK_SURFACE_AND_LATENCY_DISPOSITION",
+  "expected_features": [
+    "dedicated bounded GET endpoint",
+    "legacy full runtime view bypass",
+    "authoritative interlock and relock safety evidence",
+    "explicit missing unintegrated canonical signals",
+    "explicit missing unintegrated new_inventory_bias",
+    "collector bounded endpoint binding"
+  ],
+  "runtime_reload": false,
+  "runtime_mutation": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "effective_readiness": "NOT_READY"
+}

@@ -1,0 +1,18 @@
+{
+  "effective_readiness": "NOT_READY",
+  "execution": false,
+  "immutable_private_candidate": "50f068a26ea873476e2ee3f72d26eb82691ca278",
+  "live": false,
+  "runtime_mutation": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "runtime_reload": false,
+  "schema_version": "defensive_effective_r1a_public_ci_result_v1",
+  "status": "PASS",
+  "step_outcomes": {
+    "manifest": "success",
+    "powershell_parse": "success",
+    "private_checkout": "success",
+    "validation": "success"
+  },
+  "task_id": "DefensiveEffective-R1A_DedicatedReadbackSurfaceProvisioningAndRuntimeLatencyDisposition"
+}
