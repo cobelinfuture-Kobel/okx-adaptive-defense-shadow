@@ -15,7 +15,7 @@
     "compile": "success",
     "focused_tests": "failure",
     "governance": "success",
-    "manifest": "success",
+    "manifest": "failure",
     "private_checkout": "success"
   },
   "task_id": "GlobalIntegrationGovernance-S2_R1SignalSafetyExistingMainlinePublisherFullFix"
