@@ -1,0 +1,24 @@
+{
+  "schema_version": "global_integration_s2_public_candidate_v1",
+  "task_id": "GlobalIntegrationGovernance-S2_R1SignalSafetyExistingMainlinePublisherFullFix",
+  "private_repository": "cobelinfuture-Kobel/okx_bot_private",
+  "private_candidate_sha": "780d490d77e5ebd4d34d1f03be4627e5796c450d",
+  "private_pr": 87,
+  "scope": "EXISTING_MAINLINE_CANONICAL_SIGNAL_AND_SAFETY_READBACK_PUBLISHER",
+  "expected_features": [
+    "no new production Python file",
+    "existing five-axis report projected through S2 validator",
+    "canonical eligibility published through RuntimeStatus and AppState",
+    "existing SyncService safety publisher reused",
+    "isolated GET-only request-time fail-closed safety projection",
+    "new_inventory_bias remains explicitly missing"
+  ],
+  "runtime_reload": false,
+  "runtime_mutation": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "deletion": false,
+  "runtime_proof": "NOT_CLAIMED",
+  "effective_readiness": "NOT_READY"
+}
