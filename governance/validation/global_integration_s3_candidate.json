@@ -1,15 +1,15 @@
 {
   "schema_version": "global_integration_s3_public_ci_candidate_v1",
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "private_candidate_sha": "57122b251ec3b11368b7495078166c415fa1e4c8",
-  "private_pr": 92,
+  "private_candidate_sha": "39e4013390e15b5019f7f9426fadb5acf79c53aa",
+  "private_pr": 93,
   "expected_features": [
-    "one PowerShell orchestration runner and zero production Python modules",
-    "existing connector GET methods only for runtime priming",
-    "BackgroundRuntime WebSocket lifespan autonomous loops and order paths disabled",
-    "DENIED snapshot persisted before PRESENT assertion",
-    "exact surface eligibility reasons catalog and item counts recorded",
-    "production listener identity preserved and canary stop cleanup"
+    "existing five-axis publisher module repaired in place",
+    "authoritative RuntimeStatus report survives secondary artifact OSError",
+    "canonical AppState publisher remains on the existing SyncService lineage",
+    "focused PermissionError regression produces the exact five canonical signals",
+    "existing S3 GET-only runner remains unchanged",
+    "zero runtime proof claimed before MiniPC readback"
   ],
   "production_process_replacement": false,
   "runtime_parameter_mutation": false,
