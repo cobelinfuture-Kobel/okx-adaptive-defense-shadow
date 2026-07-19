@@ -12,11 +12,13 @@
   "schema_version": "global_integration_s3_public_ci_result_v1",
   "status": "FAIL",
   "step_outcomes": {
+    "canonical_tests": "success",
     "compile": "success",
-    "focused_tests": "failure",
     "governance": "success",
     "manifest": "success",
-    "private_checkout": "success"
+    "private_checkout": "success",
+    "publisher_test": "failure",
+    "readback_tests": "success"
   },
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
   "validation_scope": "canonical_publisher_artifact_starvation_fullfix"
