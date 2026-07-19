@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 39e4013390e15b5019f7f9426fadb5acf79c53aa
+      PRIVATE_CANDIDATE_SHA: 060159eedf7417f7470ea5ca66c261fc28f7bf80
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +32,7 @@ jobs:
           import json
           from pathlib import Path
           data = json.loads(Path("governance/validation/global_integration_s3_candidate.json").read_text())
-          assert data["private_candidate_sha"] == "39e4013390e15b5019f7f9426fadb5acf79c53aa"
+          assert data["private_candidate_sha"] == "060159eedf7417f7470ea5ca66c261fc28f7bf80"
           assert data["private_pr"] == 93
           assert len(data["expected_features"]) == 6
           assert not any(data[key] for key in (
@@ -73,10 +73,23 @@ jobs:
         continue-on-error: true
         working-directory: _private
         run: |
-          python -m pytest -q \
-            tests/test_five_axis_runtime_publisher.py \
-            tests/test_canonical_signal_eligibility.py \
-            tests/test_r1_runtime_readback.py
+          python - <<'PY'
+          import runpy
+          for path in (
+              "tests/test_five_axis_runtime_publisher.py",
+              "tests/test_canonical_signal_eligibility.py",
+              "tests/test_r1_runtime_readback.py",
+          ):
+              namespace = runpy.run_path(path)
+              tests = sorted(
+                  (name, value) for name, value in namespace.items()
+                  if name.startswith("test_") and callable(value)
+              )
+              assert tests
+              for name, test in tests:
+                  test()
+                  print(f"PASS {path}::{name}")
+          PY
 
       - name: Validate S3 orchestration and governance contract
         id: governance
@@ -111,6 +124,7 @@ jobs:
           assert "_five_axis_control_plan_shadow_builder_impl" not in publisher
           regression = Path("tests/test_five_axis_runtime_publisher.py").read_text()
           assert "simulated Windows sharing violation" in regression
+          assert "unittest.mock import patch" in regression
           assert 'canonical["signal_eligibility_state"] == "ELIGIBLE_SHADOW_INPUT"' in regression
 
           runner = Path("tools/run_global_integration_s3_getonlyqa.ps1").read_text()
@@ -149,7 +163,7 @@ jobs:
               "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
               "validation_scope": "canonical_publisher_artifact_starvation_fullfix",
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
-              "immutable_private_candidate": "39e4013390e15b5019f7f9426fadb5acf79c53aa",
+              "immutable_private_candidate": "060159eedf7417f7470ea5ca66c261fc28f7bf80",
               "step_outcomes": outcomes,
               "production_python_modules_added": 0,
               "production_process_replacement": False,
