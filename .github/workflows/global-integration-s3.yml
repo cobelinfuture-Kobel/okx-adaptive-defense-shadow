@@ -1,0 +1,181 @@
+name: Global Integration S3 Public CI
+
+on:
+  push:
+    branches:
+      - "global-integration/s3-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-s3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIVATE_CANDIDATE_SHA: ab9b5c64ff8ee7614691ef19e62918b28fe23df5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("governance/validation/global_integration_s3_candidate.json").read_text())
+          assert data["private_candidate_sha"] == "ab9b5c64ff8ee7614691ef19e62918b28fe23df5"
+          assert data["private_pr"] == 89
+          assert len(data["expected_features"]) == 6
+          assert not any(data[key] for key in (
+              "production_process_replacement", "runtime_parameter_mutation",
+              "live_apply", "execution", "order_actions", "evidence_bundle",
+          ))
+          assert data["runtime_proof"] == "NOT_CLAIMED_PENDING_MINIPC"
+          assert data["effective_readiness"] == "NOT_READY"
+          PY
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Compile existing Python
+        id: compile
+        continue-on-error: true
+        working-directory: _private
+        run: |
+          python -m py_compile adaptive_defense/r1_runtime_readback.py tests/test_r1_runtime_readback.py
+
+      - name: Run focused existing-file tests
+        id: focused_tests
+        continue-on-error: true
+        working-directory: _private
+        run: |
+          python - <<'PY'
+          import runpy
+          path = "tests/test_r1_runtime_readback.py"
+          namespace = runpy.run_path(path)
+          tests = sorted(
+              (name, value) for name, value in namespace.items()
+              if name.startswith("test_") and callable(value)
+          )
+          assert tests
+          for name, test in tests:
+              test()
+              print(f"PASS {path}::{name}")
+          PY
+
+      - name: Validate S3 orchestration and governance contract
+        id: governance
+        continue-on-error: true
+        working-directory: _private
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          task = "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA"
+          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text())
+          control = json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text())
+          progress = json.loads(Path("docs/governance/s3/latest.json").read_text())
+          assert queue["current_task"] == task == control["current_task"]
+          assert queue["in_progress_tasks"] == [task]
+          assert control["in_progress_tasks"] == [task]
+          assert queue["next_approved_task"] == task
+          assert queue["default_constraints"]["runtime_mutation_allowed"] is False
+          assert queue["default_constraints"]["live_apply_authorized"] is False
+          assert queue["default_constraints"]["production_process_restart_allowed"] is False
+          assert queue["default_constraints"]["isolated_canary_process_allowed"] is True
+          assert progress["status"] == "APPROVED_IMPLEMENTATION_IN_PROGRESS"
+          assert progress["design"]["production_python_modules_added"] == 0
+          assert progress["design"]["canary_background_runtime_enabled"] is False
+          assert progress["design"]["server_lifespan_enabled"] is False
+          assert progress["safety"]["runtime_proof"] == "NOT_CLAIMED"
+
+          source = Path("tools/run_global_integration_s3_getonlyqa.ps1").read_text()
+          assert "CreateEvidenceBundle" not in source
+          assert "CreateFromDirectory" not in source
+          assert 'lifespan="off"' in source
+          assert "OKX_WS_LOGIN_ONLY" in source
+          assert "OKX_ENABLE_TEST_LIFESPAN_RUNTIME" in source
+          assert "S3_SIGNAL_SAFETY_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED" in source
+          PY
+
+      - name: Persist S3 result marker
+        if: always() && github.event_name == 'push'
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+          FOCUSED_TESTS_OUTCOME: ${{ steps.focused_tests.outcome }}
+          GOVERNANCE_OUTCOME: ${{ steps.governance.outcome }}
+        run: |
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          outcomes = {
+              "manifest": os.environ["MANIFEST_OUTCOME"],
+              "private_checkout": os.environ["PRIVATE_CHECKOUT_OUTCOME"],
+              "compile": os.environ["COMPILE_OUTCOME"],
+              "focused_tests": os.environ["FOCUSED_TESTS_OUTCOME"],
+              "governance": os.environ["GOVERNANCE_OUTCOME"],
+          }
+          marker = {
+              "schema_version": "global_integration_s3_public_ci_result_v1",
+              "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
+              "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
+              "immutable_private_candidate": "ab9b5c64ff8ee7614691ef19e62918b28fe23df5",
+              "step_outcomes": outcomes,
+              "production_python_modules_added": 0,
+              "production_process_replacement": False,
+              "runtime_parameter_mutation": False,
+              "live": False,
+              "execution": False,
+              "order_actions": False,
+              "evidence_bundle": False,
+              "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
+              "effective_readiness": "NOT_READY",
+          }
+          path = Path("governance/validation/results/global_integration_s3_result.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance/validation/results/global_integration_s3_result.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record Global Integration S3 result"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Enforce final result
+        if: always()
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+          FOCUSED_TESTS_OUTCOME: ${{ steps.focused_tests.outcome }}
+          GOVERNANCE_OUTCOME: ${{ steps.governance.outcome }}
+        run: |
+          test "$MANIFEST_OUTCOME" = success
+          test "$PRIVATE_CHECKOUT_OUTCOME" = success
+          test "$COMPILE_OUTCOME" = success
+          test "$FOCUSED_TESTS_OUTCOME" = success
+          test "$GOVERNANCE_OUTCOME" = success
