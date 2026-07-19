@@ -3,7 +3,7 @@ name: Global Integration S3 Public CI
 on:
   push:
     branches:
-      - "global-integration/s3-public-ci-*"
+      - "global-integration/s3-*"
   pull_request:
     branches:
       - main
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: ab9b5c64ff8ee7614691ef19e62918b28fe23df5
+      PRIVATE_CANDIDATE_SHA: 57122b251ec3b11368b7495078166c415fa1e4c8
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,8 +32,8 @@ jobs:
           import json
           from pathlib import Path
           data = json.loads(Path("governance/validation/global_integration_s3_candidate.json").read_text())
-          assert data["private_candidate_sha"] == "ab9b5c64ff8ee7614691ef19e62918b28fe23df5"
-          assert data["private_pr"] == 89
+          assert data["private_candidate_sha"] == "57122b251ec3b11368b7495078166c415fa1e4c8"
+          assert data["private_pr"] == 92
           assert len(data["expected_features"]) == 6
           assert not any(data[key] for key in (
               "production_process_replacement", "runtime_parameter_mutation",
@@ -102,7 +102,7 @@ jobs:
           assert queue["default_constraints"]["live_apply_authorized"] is False
           assert queue["default_constraints"]["production_process_restart_allowed"] is False
           assert queue["default_constraints"]["isolated_canary_process_allowed"] is True
-          assert progress["status"] == "APPROVED_IMPLEMENTATION_IN_PROGRESS"
+          assert progress["status"] == "FIRST_MINIPC_RUN_DENIED_SAFE_DIAGNOSTIC_FULLFIX_PUBLIC_CI_PENDING"
           assert progress["design"]["production_python_modules_added"] == 0
           assert progress["design"]["canary_background_runtime_enabled"] is False
           assert progress["design"]["server_lifespan_enabled"] is False
@@ -115,6 +115,8 @@ jobs:
           assert "OKX_WS_LOGIN_ONLY" in source
           assert "OKX_ENABLE_TEST_LIFESPAN_RUNTIME" in source
           assert "S3_SIGNAL_SAFETY_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED" in source
+          assert source.index('snapshot_1.json') < source.index("Assert-ReadbackSurface -Data $snapshot1")
+          assert "readback_diagnostics = $readbackDiagnostics" in source
           PY
 
       - name: Persist S3 result marker
@@ -141,7 +143,7 @@ jobs:
               "schema_version": "global_integration_s3_public_ci_result_v1",
               "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
               "status": "PASS" if all(value == "success" for value in outcomes.values()) else "FAIL",
-              "immutable_private_candidate": "ab9b5c64ff8ee7614691ef19e62918b28fe23df5",
+              "immutable_private_candidate": "57122b251ec3b11368b7495078166c415fa1e4c8",
               "step_outcomes": outcomes,
               "production_python_modules_added": 0,
               "production_process_replacement": False,
