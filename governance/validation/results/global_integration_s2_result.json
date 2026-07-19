@@ -2,7 +2,7 @@
   "deletion": false,
   "effective_readiness": "NOT_READY",
   "execution": false,
-  "immutable_private_candidate": "e8ff89d45dfcd56f52f9e5329d55df3c9bba5bf0",
+  "immutable_private_candidate": "05393d8b28553245be2f462c2a2d5a1665f44b9d",
   "live": false,
   "new_production_python_files": 0,
   "order_actions": false,
@@ -10,12 +10,12 @@
   "runtime_proof": "NOT_CLAIMED",
   "runtime_reload": false,
   "schema_version": "global_integration_s2_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
-    "compile": "failure",
-    "focused_tests": "failure",
+    "compile": "success",
+    "focused_tests": "success",
     "governance": "success",
-    "manifest": "failure",
+    "manifest": "success",
     "private_checkout": "success"
   },
   "task_id": "GlobalIntegrationGovernance-S2_R1SignalSafetyExistingMainlinePublisherFullFix"
