@@ -1,13 +1,13 @@
 {
   "schema_version": "global_integration_s3_public_ci_candidate_v1",
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "private_candidate_sha": "39e4013390e15b5019f7f9426fadb5acf79c53aa",
+  "private_candidate_sha": "060159eedf7417f7470ea5ca66c261fc28f7bf80",
   "private_pr": 93,
   "expected_features": [
     "existing five-axis publisher module repaired in place",
     "authoritative RuntimeStatus report survives secondary artifact OSError",
     "canonical AppState publisher remains on the existing SyncService lineage",
-    "focused PermissionError regression produces the exact five canonical signals",
+    "fixture-free PermissionError regression produces the exact five canonical signals",
     "existing S3 GET-only runner remains unchanged",
     "zero runtime proof claimed before MiniPC readback"
   ],
