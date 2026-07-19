@@ -5,7 +5,7 @@
   "execution": false,
   "focused_tests": "PASS",
   "governance": "PASS",
-  "immutable_private_candidate": "d4ad1fb9afd7d32e4f7cb7554333c0ee70fe59be",
+  "immutable_private_candidate": "dc6a6bb163e97d13b03c02440555f0888d76f1c1",
   "live": false,
   "order_actions": false,
   "production_process_replacement": false,
@@ -15,5 +15,5 @@
   "schema_version": "global_integration_s3_public_ci_result_v1",
   "status": "PASS",
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "validation_scope": "authoritative_package_publisher_artifact_starvation_fullfix"
+  "validation_scope": "authoritative_publisher_prime_sequence_fullfix"
 }
