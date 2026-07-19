@@ -2,8 +2,8 @@
   "schema_version": "defensive_effective_r1b_public_candidate_v1",
   "task_id": "DefensiveEffective-R1B_BoundedRuntimeReloadAndDedicatedReadbackQA",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
-  "private_candidate_sha": "06c18d5d19d7c12979ec2d5ca80656d006bb725d",
-  "private_pr": 80,
+  "private_candidate_sha": "8c25e3bce4fe2e5caf7c70268a0b86f626e0e07d",
+  "private_pr": 81,
   "execution_model": "PARALLEL_FRESH_PROCESS_CANARY_PRODUCTION_UNCHANGED",
   "production_port": 8000,
   "canary_port": 18001,
@@ -20,5 +20,6 @@
   "runtime_config_mode": "PRODUCTION_ROOT_READONLY",
   "cold_start_latency_gate": false,
   "measured_readback_latency_limit_ms": 1000,
-  "evidence_packaging": "OPT_IN_PASS_ONLY_RECURSIVE"
+  "evidence_packaging": "OPT_IN_PASS_ONLY_RECURSIVE",
+  "legacy_production_status_request": false
 }
