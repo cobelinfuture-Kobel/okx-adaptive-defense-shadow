@@ -1,10 +1,10 @@
 {
   "schema_version": "defensive_effective_r1b_public_ci_result_v1",
   "task_id": "DefensiveEffective-R1B_BoundedRuntimeReloadAndDedicatedReadbackQA",
-  "status": "FAIL",
-  "immutable_private_candidate": "8c25e3bce4fe2e5caf7c70268a0b86f626e0e07d",
+  "status": "PASS",
+  "immutable_private_candidate": "ded237a8cbc51a235392e0d810f6d867ad1ec8c6",
   "step_outcomes": {
-    "manifest": "failure",
+    "manifest": "success",
     "private_checkout": "success",
     "powershell_parse": "success",
     "validation": "success"
