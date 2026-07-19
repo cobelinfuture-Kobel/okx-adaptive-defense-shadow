@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 12
     env:
-      PRIVATE_CANDIDATE_SHA: 06c18d5d19d7c12979ec2d5ca80656d006bb725d
+      PRIVATE_CANDIDATE_SHA: 8c25e3bce4fe2e5caf7c70268a0b86f626e0e07d
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,14 +30,15 @@ jobs:
         shell: pwsh
         run: |
           $data = Get-Content governance/validation/defensive_effective_r1b_candidate.json -Raw | ConvertFrom-Json
-          if ($data.private_candidate_sha -ne "06c18d5d19d7c12979ec2d5ca80656d006bb725d") { throw "candidate SHA mismatch" }
-          if ($data.private_pr -ne 80) { throw "private PR mismatch" }
+          if ($data.private_candidate_sha -ne "8c25e3bce4fe2e5caf7c70268a0b86f626e0e07d") { throw "candidate SHA mismatch" }
+          if ($data.private_pr -ne 81) { throw "private PR mismatch" }
           if ($data.execution_model -ne "PARALLEL_FRESH_PROCESS_CANARY_PRODUCTION_UNCHANGED") { throw "execution model mismatch" }
           if ($data.production_port -eq $data.canary_port) { throw "port isolation missing" }
           if ($data.background_runtime_enabled -or -not $data.login_only) { throw "canary safety mismatch" }
           if ($data.runtime_config_mode -ne "PRODUCTION_ROOT_READONLY") { throw "runtime config mode mismatch" }
           if ($data.cold_start_latency_gate -or $data.measured_readback_latency_limit_ms -ne 1000) { throw "latency disposition mismatch" }
           if ($data.evidence_packaging -ne "OPT_IN_PASS_ONLY_RECURSIVE") { throw "evidence packaging policy mismatch" }
+          if ($data.legacy_production_status_request) { throw "legacy production status request must remain disabled" }
           foreach ($field in @("production_stop_allowed","production_restart_allowed","runtime_mutation","live_apply","execution","order_actions")) {
             if ($data.$field) { throw "forbidden authority enabled: $field" }
           }
@@ -105,7 +106,7 @@ jobs:
             schema_version = "defensive_effective_r1b_public_ci_result_v1"
             task_id = "DefensiveEffective-R1B_BoundedRuntimeReloadAndDedicatedReadbackQA"
             status = if ($pass) { "PASS" } else { "FAIL" }
-            immutable_private_candidate = "06c18d5d19d7c12979ec2d5ca80656d006bb725d"
+            immutable_private_candidate = "8c25e3bce4fe2e5caf7c70268a0b86f626e0e07d"
             step_outcomes = $outcomes
             production_process_touched = $false
             runtime_mutation = $false
