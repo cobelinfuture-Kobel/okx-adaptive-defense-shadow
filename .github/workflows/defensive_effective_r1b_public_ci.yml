@@ -1,0 +1,141 @@
+name: DefensiveEffective R1B Public CI
+
+on:
+  push:
+    branches:
+      - "defensive-effective/r1b-public-ci-*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-r1b:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    env:
+      PRIVATE_CANDIDATE_SHA: 18acf5db5cf699f1acc7bbac8d97320044cf8618
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
+
+      - name: Validate candidate manifest
+        id: manifest
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $data = Get-Content governance/validation/defensive_effective_r1b_candidate.json -Raw | ConvertFrom-Json
+          if ($data.private_candidate_sha -ne "18acf5db5cf699f1acc7bbac8d97320044cf8618") { throw "candidate SHA mismatch" }
+          if ($data.private_pr -ne 79) { throw "private PR mismatch" }
+          if ($data.execution_model -ne "PARALLEL_FRESH_PROCESS_CANARY_PRODUCTION_UNCHANGED") { throw "execution model mismatch" }
+          if ($data.production_port -eq $data.canary_port) { throw "port isolation missing" }
+          if ($data.background_runtime_enabled -or -not $data.login_only) { throw "canary safety mismatch" }
+          foreach ($field in @("production_stop_allowed","production_restart_allowed","runtime_mutation","live_apply","execution","order_actions")) {
+            if ($data.$field) { throw "forbidden authority enabled: $field" }
+          }
+          if ($data.runtime_proof -ne "NOT_CLAIMED" -or $data.effective_readiness -ne "NOT_READY") { throw "readiness overclaim" }
+
+      - name: Checkout immutable Private candidate
+        id: private_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: cobelinfuture-Kobel/okx_bot_private
+          ref: ${{ env.PRIVATE_CANDIDATE_SHA }}
+          token: ${{ secrets.PRIVATE_PROMOTION_TOKEN }}
+          path: _private
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Parse R1B PowerShell
+        id: powershell_parse
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          foreach ($path in @(
+            "_private/tools/run_defensive_effective_r1b_reloadqa.ps1",
+            "_private/tools/collect_defensive_effective_r1_readonly.ps1"
+          )) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $path), [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | Format-List | Out-String | Write-Error
+              exit 1
+            }
+          }
+
+      - name: Validate R1B source and governance
+        id: validation
+        continue-on-error: true
+        working-directory: _private
+        shell: pwsh
+        run: |
+          python -c "import runpy; paths=['tests/test_r1b_reloadqa_script.py','tests/test_r1_runtime_readback.py','tests/test_collect_defensive_effective_r1_readonly_script.py']; [(print('PASS '+p+'::'+n), f()) for p in paths for n,f in sorted((n,v) for n,v in runpy.run_path(p).items() if n.startswith('test_') and callable(v))]"
+          python -c "import json,pathlib; q=json.loads(pathlib.Path('docs/roadmap/task_queue.json').read_text()); c=json.loads(pathlib.Path('docs/roadmap/task_queue_parts/control_state.json').read_text()); l=json.loads(pathlib.Path('docs/roadmap/defensive_effective/r1/latest.json').read_text()); t='DefensiveEffective-R1B_BoundedRuntimeReloadAndDedicatedReadbackQA'; assert q['current_task']==t==c['current_task']; assert q['in_progress_tasks']==[t]==c['in_progress_tasks']; assert q['default_constraints']['runtime_mutation_allowed'] is False; assert q['default_constraints']['production_process_restart_allowed'] is False; assert l['status']=='R1B_IMPLEMENTED_PUBLIC_CI_PENDING_LOCAL_CANARY_PENDING'; assert l['safety']['runtime_proof']=='NOT_CLAIMED'; assert l['safety']['effective_readiness']=='NOT_READY'"
+
+      - name: Persist R1B result marker
+        if: always() && github.event_name == 'push'
+        shell: pwsh
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          POWERSHELL_PARSE_OUTCOME: ${{ steps.powershell_parse.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
+        run: |
+          git pull --rebase origin "$env:GITHUB_REF_NAME"
+          $outcomes = [ordered]@{
+            manifest = $env:MANIFEST_OUTCOME
+            private_checkout = $env:PRIVATE_CHECKOUT_OUTCOME
+            powershell_parse = $env:POWERSHELL_PARSE_OUTCOME
+            validation = $env:VALIDATION_OUTCOME
+          }
+          $pass = @($outcomes.Values | Where-Object { $_ -ne "success" }).Count -eq 0
+          $marker = [ordered]@{
+            schema_version = "defensive_effective_r1b_public_ci_result_v1"
+            task_id = "DefensiveEffective-R1B_BoundedRuntimeReloadAndDedicatedReadbackQA"
+            status = if ($pass) { "PASS" } else { "FAIL" }
+            immutable_private_candidate = "18acf5db5cf699f1acc7bbac8d97320044cf8618"
+            step_outcomes = $outcomes
+            production_process_touched = $false
+            runtime_mutation = $false
+            live = $false
+            execution = $false
+            runtime_proof = "NOT_CLAIMED"
+            effective_readiness = "NOT_READY"
+          }
+          $path = "governance/validation/results/defensive_effective_r1b_result.json"
+          New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+          $marker | ConvertTo-Json -Depth 20 | Set-Content -Path $path -Encoding utf8
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $path
+          if (-not (git diff --cached --quiet)) {
+            git commit -m "ci: record DefensiveEffective R1B result"
+            git push origin "HEAD:$env:GITHUB_REF_NAME"
+          }
+
+      - name: Enforce final result
+        if: always()
+        shell: pwsh
+        env:
+          MANIFEST_OUTCOME: ${{ steps.manifest.outcome }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_checkout.outcome }}
+          POWERSHELL_PARSE_OUTCOME: ${{ steps.powershell_parse.outcome }}
+          VALIDATION_OUTCOME: ${{ steps.validation.outcome }}
+        run: |
+          foreach ($value in @(
+            $env:MANIFEST_OUTCOME,
+            $env:PRIVATE_CHECKOUT_OUTCOME,
+            $env:POWERSHELL_PARSE_OUTCOME,
+            $env:VALIDATION_OUTCOME
+          )) {
+            if ($value -ne "success") { throw "R1B Public CI gate failed: $value" }
+          }
