@@ -11,12 +11,12 @@
   "runtime_parameter_mutation": false,
   "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
   "schema_version": "global_integration_s3_public_ci_result_v1",
-  "status": "PASS",
+  "status": "FAIL",
   "step_outcomes": {
     "compile": "success",
     "focused_tests": "success",
     "governance": "success",
-    "manifest": "success",
+    "manifest": "failure",
     "package_patch": "success",
     "private_blob": "success",
     "private_checkout": "success"
