@@ -2,7 +2,7 @@
   "schema_version": "global_integration_s2_public_candidate_v1",
   "task_id": "GlobalIntegrationGovernance-S2_R1SignalSafetyExistingMainlinePublisherFullFix",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
-  "private_candidate_sha": "e8ff89d45dfcd56f52f9e5329d55df3c9bba5bf0",
+  "private_candidate_sha": "05393d8b28553245be2f462c2a2d5a1665f44b9d",
   "private_pr": 87,
   "scope": "EXISTING_MAINLINE_CANONICAL_SIGNAL_AND_SAFETY_READBACK_PUBLISHER",
   "expected_features": [
