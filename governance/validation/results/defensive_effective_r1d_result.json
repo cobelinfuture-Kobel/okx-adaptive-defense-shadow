@@ -1,0 +1,18 @@
+{
+  "compile": "PASS",
+  "effective_readiness": "NOT_READY",
+  "execution": false,
+  "focused_tests": "PASS",
+  "governance": "PASS",
+  "immutable_private_candidate": "d6c909ca5e04e8c98e831df6faf9a57ca0fe804e",
+  "live": false,
+  "new_production_modules": 0,
+  "new_runners": 0,
+  "order_actions": false,
+  "private_pr": 97,
+  "runtime_parameter_mutation": false,
+  "runtime_proof": "NOT_CLAIMED_PENDING_FRESH_PROCESS_GET",
+  "schema_version": "defensive_effective_r1d_public_ci_result_v1",
+  "status": "PASS",
+  "task_id": "DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix"
+}
