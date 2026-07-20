@@ -4,7 +4,7 @@
   "private_candidate_sha": "6e641c8badddcd4598d51f9b354084b39775abcf",
   "private_pr": 107,
   "validation_scope": "existing_r1_get_contract_lineage_and_current_runtime_preflight_projection",
-  "workflow_revision": "R4_PUSH_ONLY_PUBLIC_AUTHORITY_V5_DIAGNOSTIC",
+  "workflow_revision": "R4_PUSH_ONLY_PUBLIC_AUTHORITY_V6_TRACE",
   "expected_r4_test_count": 10,
   "exact_inst_id": "BTC-USDT-SWAP",
   "exact_action": "REDUCE_NEW_INVENTORY_BIAS",
