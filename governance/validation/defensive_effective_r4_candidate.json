@@ -1,10 +1,10 @@
 {
   "schema_version": "defensive_effective_r4_public_ci_candidate_v1",
   "task_id": "DefensiveEffective-R4_CurrentRuntimeOneShotCanaryPreflightEvidenceCorrelation_FullFix",
-  "private_candidate_sha": "6e641c8badddcd4598d51f9b354084b39775abcf",
+  "private_candidate_sha": "f85bdc278a443e03bed2e0a58fbfcb6a3d8278e6",
   "private_pr": 107,
   "validation_scope": "existing_r1_get_contract_lineage_and_current_runtime_preflight_projection",
-  "workflow_revision": "R4_PUSH_ONLY_PUBLIC_AUTHORITY_V6_TRACE",
+  "workflow_revision": "R4_PUSH_ONLY_PUBLIC_AUTHORITY_V7_CANONICAL_PATHS",
   "expected_r4_test_count": 10,
   "exact_inst_id": "BTC-USDT-SWAP",
   "exact_action": "REDUCE_NEW_INVENTORY_BIAS",
