@@ -1,0 +1,22 @@
+{
+  "schema_version": "defensive_effective_r4_public_ci_candidate_v1",
+  "task_id": "DefensiveEffective-R4_CurrentRuntimeOneShotCanaryPreflightEvidenceCorrelation_FullFix",
+  "private_candidate_sha": "8498dc868c25c37b7f44a236abb91034b6afdab9",
+  "private_pr": 107,
+  "validation_scope": "existing_r1_get_contract_lineage_and_current_runtime_preflight_projection",
+  "expected_r4_test_count": 10,
+  "exact_inst_id": "BTC-USDT-SWAP",
+  "exact_action": "REDUCE_NEW_INVENTORY_BIAS",
+  "new_route": false,
+  "new_runtime_publisher": false,
+  "new_service": false,
+  "new_executor": false,
+  "runtime_access": false,
+  "runtime_mutation": false,
+  "live_activation": false,
+  "execution": false,
+  "order_actions": false,
+  "overall_progress": 63,
+  "distance_to_goal": 37,
+  "effective_readiness": "NOT_READY"
+}
