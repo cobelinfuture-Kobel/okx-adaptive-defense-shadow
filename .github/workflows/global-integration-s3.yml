@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 77f85375e42d2d8a29aa7037447f9fed8c67a4e1
+      PRIVATE_CANDIDATE_SHA: 6e641c8badddcd4598d51f9b354084b39775abcf
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,7 +26,7 @@ jobs:
           import json
           from pathlib import Path
           d=json.loads(Path("governance/validation/defensive_effective_r4_candidate.json").read_text())
-          assert d["private_candidate_sha"]=="77f85375e42d2d8a29aa7037447f9fed8c67a4e1"
+          assert d["private_candidate_sha"]=="6e641c8badddcd4598d51f9b354084b39775abcf"
           assert d["private_pr"]==107
           assert d["validation_scope"]=="existing_r1_get_contract_lineage_and_current_runtime_preflight_projection"
           assert d["expected_r4_test_count"]==10
@@ -141,7 +141,7 @@ jobs:
               "task_id":"DefensiveEffective-R4_CurrentRuntimeOneShotCanaryPreflightEvidenceCorrelation_FullFix",
               "validation_scope":"existing_r1_get_contract_lineage_and_current_runtime_preflight_projection",
               "status":"PASS",
-              "immutable_private_candidate":"77f85375e42d2d8a29aa7037447f9fed8c67a4e1",
+              "immutable_private_candidate":"6e641c8badddcd4598d51f9b354084b39775abcf",
               "private_pr":107,
               "compile":"PASS",
               "r4_focused_test_count":10,
