@@ -1,0 +1,13 @@
+{
+  "private_candidate_sha": "d6c909ca5e04e8c98e831df6faf9a57ca0fe804e",
+  "private_pr": 97,
+  "new_production_module": false,
+  "new_runner": false,
+  "production_process_replacement": false,
+  "runtime_parameter_mutation": false,
+  "live_apply": false,
+  "execution": false,
+  "order_actions": false,
+  "runtime_proof": "NOT_CLAIMED_PENDING_FRESH_PROCESS_GET",
+  "effective_readiness": "NOT_READY"
+}
