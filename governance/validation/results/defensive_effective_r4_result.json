@@ -1,18 +1,11 @@
 {
-  "compile": "FAIL",
-  "contract_lineage": "FAIL",
+  "boundary_diagnostic_tail": "{\n  \"action\": \"REDUCE_NEW_INVENTORY_BIAS\",\n  \"authority_source\": \"S8_GOVERNANCE_S9_VALIDATOR_R3_PUBLIC_CLOSEOUT\",\n  \"authorization_granted\": false,\n  \"auto_loop\": false,\n  \"automatic_relock_to_shadow\": true,\n  \"contract_lineage_digest\": \"ce7d7385ccdd0ba6d638d92c51df2e4c29ba2f29abb302efaa2c0001b82a65be\",\n  \"denial_reasons\": [\n    \"S8_GOVERNANCE_EVIDENCE_MISSING\",\n    \"S9_APPROVAL_PACKAGE_NOT_REBUILT\",\n    \"S9_GOVERNANCE_EVIDENCE_MISSING\"\n  ],\n  \"direction\": \"DECREASE_ONLY\",\n  \"lineage_state\": \"BLOCKED\",\n  \"live_apply_authorized\": false,\n  \"max_action_count\": 1,\n  \"max_symbols\": 1,\n  \"maximum_absolute_delta\": 0.05,\n  \"one_shot_only\": true,\n  \"parameter\": \"new_inventory_bias\",\n  \"r3_private_candidate_sha\": \"7a154de36ff373ab04d391a156fb14714cb6658b\",\n  \"r3_private_merge_sha\": \"d898f4ad9cd72951398ea4d6247e44503f73e876\",\n  \"r3_public_merge_sha\": \"9ecc8bea36cab805b3abf5f29026826e98b4ba34\",\n  \"r3_public_result_head\": \"c7e8784f4fb259d7fca503daeef99d6b82f9893d\",\n  \"runtime_mutation_allowed\": false,\n  \"s14_governor_binding_state\": \"MATCH\",\n  \"s15_canary_binding_state\": \"MATCH\",\n  \"s9_approval_package_digest\": \"\",\n  \"s9_exact_envelope_digest\": \"\",\n  \"s9_operator_approval_digest\": \"\",\n  \"schema_version\": \"DefensiveEffective-R4.ContractLineageProof.v1\"\n}\nTraceback (most recent call last):\n  File \"<stdin>\", line 6, in <module>\nAssertionError: ['S8_GOVERNANCE_EVIDENCE_MISSING', 'S9_APPROVAL_PACKAGE_NOT_REBUILT', 'S9_GOVERNANCE_EVIDENCE_MISSING']\n",
   "current_runtime_get_proof": "NOT_CLAIMED",
   "distance_to_goal": 37,
   "effective_readiness": "NOT_READY",
   "execution": false,
-  "fail_closed_scope": "FAIL",
-  "focused_tests": "FAIL",
   "immutable_private_candidate": "6e641c8badddcd4598d51f9b354084b39775abcf",
   "live_activation": false,
-  "new_executors": 0,
-  "new_routes": 0,
-  "new_runtime_publishers": 0,
-  "new_services": 0,
   "order_actions": false,
   "overall_progress": 63,
   "private_pr": 107,
@@ -20,7 +13,7 @@
   "r4_focused_test_count": 10,
   "runtime_access": false,
   "runtime_mutation": false,
-  "schema_version": "defensive_effective_r4_public_ci_result_v1",
+  "schema_version": "defensive_effective_r4_public_ci_result_v2",
   "status": "FAIL",
   "step_outcomes": {
     "boundary": "failure",
@@ -29,5 +22,6 @@
     "tests": "failure"
   },
   "task_id": "DefensiveEffective-R4_CurrentRuntimeOneShotCanaryPreflightEvidenceCorrelation_FullFix",
+  "tests_diagnostic_tail": "R4_COUNT=10\nTOTAL_COUNT=21\nF....................                                                    [100%]\n=================================== FAILURES ===================================\n_______________ test_contract_lineage_rebuild_matches_s9_and_r3 ________________\n\n    def test_contract_lineage_rebuild_matches_s9_and_r3():\n        load_contract_lineage_proof.cache_clear();proof=load_contract_lineage_proof()\n>       assert proof[\"lineage_state\"]==\"MATCH\"\nE       AssertionError: assert 'BLOCKED' == 'MATCH'\nE         \nE         - MATCH\nE         + BLOCKED\n\ntests/test_r4_preflight_correlation.py:30: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_r4_preflight_correlation.py::test_contract_lineage_rebuild_matches_s9_and_r3 - AssertionError: assert 'BLOCKED' == 'MATCH'\n  \n  - MATCH\n  + BLOCKED\n1 failed, 20 passed in 0.12s\n",
   "total_test_count": 21
 }
