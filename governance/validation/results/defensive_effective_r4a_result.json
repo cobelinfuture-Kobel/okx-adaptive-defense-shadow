@@ -1,19 +1,19 @@
 {
   "effective_readiness": "NOT_READY",
   "execution": false,
-  "focused_test_count": 141,
-  "immutable_private_candidate": "916f7395af5db8e2f126d21c5501f659cd1c6323",
+  "focused_test_count": 109,
+  "immutable_private_candidate": "3029358d12ec4dbf07bd985a39a7534838e346b2",
   "live": false,
   "local_runtime_qa": "PENDING",
   "runtime_mutation": false,
   "runtime_proof": "NOT_CLAIMED",
   "runtime_reload": false,
   "schema_version": "defensive_effective_r4a_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
     "manifest": "success",
     "private_checkout": "success",
-    "validation": "failure"
+    "validation": "success"
   },
   "task_id": "DefensiveEffective-R4A_CurrentRuntimeEvidenceContractAlignmentAndConditionDisposition_FullFix"
 }
