@@ -1,0 +1,18 @@
+{
+  "schema_version": "defensive_effective_r2_public_ci_candidate_v1",
+  "task_id": "DefensiveEffective-R2_NewInventoryBiasGovernorCanaryContractLineage_FullFix",
+  "private_candidate_sha": "2593b4210551a57b404e0ef133bf705b64858a70",
+  "private_pr": 103,
+  "validation_scope": "r1d_parameter_to_s14_governor_to_s15_canary_shadow_contract_lineage",
+  "expected_focused_test_count": 27,
+  "new_action_class": "REDUCE_NEW_INVENTORY_BIAS",
+  "new_production_module": false,
+  "new_runner": false,
+  "new_executor": false,
+  "runtime_access": false,
+  "runtime_mutation": false,
+  "live_activation": false,
+  "execution": false,
+  "order_actions": false,
+  "effective_readiness": "NOT_READY"
+}
