@@ -1,9 +1,6 @@
 {
-  "schema_version": "defensive_effective_r1d_public_ci_candidate_v1",
-  "task_id": "DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix",
   "private_candidate_sha": "d6c909ca5e04e8c98e831df6faf9a57ca0fe804e",
   "private_pr": 97,
-  "expected_features": ["neutral authority", "stable revision", "source digest", "read-only consumer", "fail closed", "fresh-process proof pending"],
   "new_production_module": false,
   "new_runner": false,
   "production_process_replacement": false,
