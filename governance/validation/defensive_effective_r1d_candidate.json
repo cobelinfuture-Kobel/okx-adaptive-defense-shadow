@@ -1,6 +1,7 @@
 {
-  "private_candidate_sha": "d6c909ca5e04e8c98e831df6faf9a57ca0fe804e",
-  "private_pr": 97,
+  "private_candidate_sha": "667aa157261143eebfda7abc1e9bdbeba5ce43e5",
+  "private_pr": 98,
+  "validation_scope": "existing_runner_parameter_surface_mode",
   "new_production_module": false,
   "new_runner": false,
   "production_process_replacement": false,
