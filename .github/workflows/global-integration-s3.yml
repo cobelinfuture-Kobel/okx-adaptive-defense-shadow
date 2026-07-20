@@ -1,25 +1,23 @@
-name: Defensive Effective R2 Public CI
+name: Defensive Effective R3 Public CI
 
 on:
   push:
-    branches: ["validation/r2-*"]
-  pull_request:
-    branches: [main]
+    branches: ["validation/r3-*"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  validate-r2:
+  validate-r3:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 2593b4210551a57b404e0ef133bf705b64858a70
+      PRIVATE_CANDIDATE_SHA: 7a154de36ff373ab04d391a156fb14714cb6658b
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.ref_name }}
           persist-credentials: true
 
       - name: Validate manifest
@@ -27,13 +25,15 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          d=json.loads(Path("governance/validation/defensive_effective_r2_candidate.json").read_text())
-          assert d["private_candidate_sha"]=="2593b4210551a57b404e0ef133bf705b64858a70"
-          assert d["private_pr"]==103
-          assert d["validation_scope"]=="r1d_parameter_to_s14_governor_to_s15_canary_shadow_contract_lineage"
-          assert d["expected_focused_test_count"]==27
-          assert d["new_action_class"]=="REDUCE_NEW_INVENTORY_BIAS"
-          assert not any(d[k] for k in ("new_production_module","new_runner","new_executor","runtime_access","runtime_mutation","live_activation","execution","order_actions"))
+          d=json.loads(Path("governance/validation/defensive_effective_r3_candidate.json").read_text())
+          assert d["private_candidate_sha"]=="7a154de36ff373ab04d391a156fb14714cb6658b"
+          assert d["private_pr"]==105
+          assert d["validation_scope"]=="s9_exact_envelope_to_s14_governor_to_s15_canary_single_authority_lineage"
+          assert d["expected_focused_test_count"]==30
+          assert not any(d[k] for k in (
+              "new_production_module","new_runner","new_executor","s9_source_modified",
+              "runtime_access","runtime_mutation","live_activation","execution","order_actions",
+          ))
           assert d["effective_readiness"]=="NOT_READY"
           PY
 
@@ -51,6 +51,7 @@ jobs:
         working-directory: _private
         run: |
           python -m py_compile \
+            adaptive_defense/lowest_risk_one_shot_policy_approval.py \
             adaptive_defense/effective_governor_action_contract.py \
             adaptive_defense/defensive_parameter_canary.py \
             tests/test_effective_governor_action_contract.py \
@@ -69,39 +70,50 @@ jobs:
                   f()
                   total+=1
                   print(f"PASS {p}::{n}")
-          assert total==27, total
+          assert total==30, total
           print(f"FOCUSED_TEST_COUNT={total}")
           PY
 
-      - name: Validate contract lineage and safety
+      - name: Validate authority lineage and safety
         working-directory: _private
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          from adaptive_defense.effective_governor_action_contract import ALLOWED_ACTION_CLASSES as governor_actions
-          from adaptive_defense.defensive_parameter_canary import ALLOWED_ACTION_CLASSES as canary_actions
+          from adaptive_defense.lowest_risk_one_shot_policy_approval import EXACT_ENVELOPE
 
           expected={
-              "DEFENSIVE_SPACING",
-              "DEFENSIVE_SIZING",
-              "DEFENSIVE_ORDER_COUNT_CAP",
-              "SERVICE_FLOOR_PRESERVATION",
-              "REDUCE_NEW_INVENTORY_BIAS",
+              "envelope_id":"DA-S9-LOWEST-RISK-ONE-SHOT-v1",
+              "envelope_version":"1",
+              "approval_scope":"S10_SHADOW_CONSTRUCTION_AND_VALIDATION_ONLY",
+              "inst_id":"BTC-USDT-SWAP",
+              "axis":"INVENTORY_RISK",
+              "action":"REDUCE_NEW_INVENTORY_BIAS",
+              "parameter_name":"new_inventory_bias",
+              "direction":"DECREASE_ONLY",
+              "maximum_absolute_delta":0.05,
+              "max_symbols":1,
+              "max_action_count":1,
+              "one_shot_only":True,
+              "auto_loop":False,
+              "risk_increasing_allowed":False,
+              "new_inventory_allowed":False,
+              "leverage_increase_allowed":False,
+              "automatic_relock_to_shadow":True,
           }
-          assert governor_actions==expected
-          assert canary_actions==expected
+          for key,value in expected.items():
+              assert EXACT_ENVELOPE[key]==value
 
-          task="DefensiveEffective-R2_NewInventoryBiasGovernorCanaryContractLineage_FullFix"
+          task="DefensiveEffective-R3_S9EnvelopeGovernorCanaryAuthorityReconciliation_FullFix"
           q=json.loads(Path("docs/roadmap/task_queue.json").read_text())
           c=json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text())
-          p=json.loads(Path("docs/governance/r2/latest.json").read_text())
+          p=json.loads(Path("docs/governance/r3/latest.json").read_text())
           assert q["current_task"]==task==c["current_task"]
           assert q["in_progress_tasks"]==[task]==c["in_progress_tasks"]
           assert q["next_approved_task"]==task==c["next_approved_task"]
           assert p["status"]=="FULLFIX_IMPLEMENTED_PUBLIC_CI_PENDING"
-          assert p["mainline"]["overall_progress"]==61
-          assert p["mainline"]["distance_to_goal"]==39
+          assert p["mainline"]["overall_progress"]==62
+          assert p["mainline"]["distance_to_goal"]==38
           for key,value in {
               "shadow_only":True,
               "effective":False,
@@ -116,49 +128,48 @@ jobs:
 
           governor=Path("adaptive_defense/effective_governor_action_contract.py").read_text()
           canary=Path("adaptive_defense/defensive_parameter_canary.py").read_text()
+          s9=Path("adaptive_defense/lowest_risk_one_shot_policy_approval.py").read_text()
+          assert "R3.S9AuthorityBinding.v1" in governor
+          assert "R3.S9AuthorityBinding.v1" in canary
+          assert "from adaptive_defense.lowest_risk_one_shot_policy_approval import EXACT_ENVELOPE" in governor
+          for token in (
+              '"s9_approval_package_digest"',
+              '"s9_exact_envelope_digest"',
+              '"s9_authority_binding"',
+              '"authorization_granted": False',
+              '"runtime_mutation_allowed": False',
+              '"live_apply_authorized": False',
+          ):
+              assert token in governor
+              assert token in canary
+          assert '"direction": "DECREASE_ONLY"' in s9
+          assert '"maximum_absolute_delta": 0.05' in s9
           for source in (governor,canary):
-              for token in (
-                  'NEW_INVENTORY_BIAS_ACTION_CLASS = "REDUCE_NEW_INVENTORY_BIAS"',
-                  '"parameter_revision"',
-                  '"parameter_source_sha256"',
-                  '"runtime_consumer_sha256"',
-                  '"one_shot_only"',
-                  '"auto_loop"',
-                  '"automatic_relock_to_shadow"',
-                  '"authorization_granted": False',
-                  '"runtime_mutation_allowed": False',
-                  '"live_apply_authorized": False',
-              ):
-                  assert token in source
               for forbidden in (
                   "requests.","httpx.","subprocess.","socket.",
                   "place_order(","cancel_order(","amend_order(","apply_parameter(",
               ):
                   assert forbidden not in source
-          assert "proposed_delta >= 0" in canary
-          assert "SIGNAL_SAFETY_AND_PARAMETER_READBACK_PROVEN" in governor
-          assert "PRESENT_NEUTRAL_SHADOW_READONLY" in governor
           PY
 
-      - name: Persist R2 result
-        if: github.event_name == 'push'
+      - name: Persist R3 result
         run: |
           git pull --rebase origin "${GITHUB_REF_NAME}"
           python - <<'PY'
           import json
           from pathlib import Path
           m={
-              "schema_version":"defensive_effective_r2_public_ci_result_v1",
-              "task_id":"DefensiveEffective-R2_NewInventoryBiasGovernorCanaryContractLineage_FullFix",
-              "validation_scope":"r1d_parameter_to_s14_governor_to_s15_canary_shadow_contract_lineage",
+              "schema_version":"defensive_effective_r3_public_ci_result_v1",
+              "task_id":"DefensiveEffective-R3_S9EnvelopeGovernorCanaryAuthorityReconciliation_FullFix",
+              "validation_scope":"s9_exact_envelope_to_s14_governor_to_s15_canary_single_authority_lineage",
               "status":"PASS",
-              "immutable_private_candidate":"2593b4210551a57b404e0ef133bf705b64858a70",
-              "private_pr":103,
+              "immutable_private_candidate":"7a154de36ff373ab04d391a156fb14714cb6658b",
+              "private_pr":105,
               "compile":"PASS",
-              "focused_test_count":27,
+              "focused_test_count":30,
               "focused_tests":"PASS",
-              "lineage_and_safety":"PASS",
-              "new_action_class":"REDUCE_NEW_INVENTORY_BIAS",
+              "authority_lineage_and_safety":"PASS",
+              "s9_source_modified":False,
               "new_production_modules":0,
               "new_runners":0,
               "new_executors":0,
@@ -169,11 +180,14 @@ jobs:
               "order_actions":False,
               "effective_readiness":"NOT_READY",
           }
-          p=Path("governance/validation/results/defensive_effective_r2_result.json")
+          p=Path("governance/validation/results/defensive_effective_r3_result.json")
           p.parent.mkdir(parents=True,exist_ok=True)
           p.write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add governance/validation/results/defensive_effective_r2_result.json
-          if ! git diff --cached --quiet; then git commit -m "ci: record R2 contract lineage validation"; git push origin "HEAD:${GITHUB_REF_NAME}"; fi
+          git add governance/validation/results/defensive_effective_r3_result.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: record R3 authority lineage validation"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
