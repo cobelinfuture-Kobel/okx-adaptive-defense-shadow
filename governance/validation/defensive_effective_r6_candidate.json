@@ -1,0 +1,20 @@
+{
+  "schema_version": "defensive_effective_r6_candidate_v1",
+  "task_id": "DefensiveEffective-R6_OperatorApprovedOneShotDefensiveParameterCanary",
+  "private_candidate_sha": "0795327809ac66f3a5dda0c96716a96788c3ea93",
+  "private_pr": 114,
+  "expected_r6_test_count": 13,
+  "exact_inst_id": "BTC-USDT-SWAP",
+  "exact_action": "REDUCE_NEW_INVENTORY_BIAS",
+  "exact_parameter": "new_inventory_bias",
+  "baseline_value": 0,
+  "canary_value": -0.05,
+  "maximum_absolute_delta": 0.05,
+  "max_symbols": 1,
+  "max_action_count": 1,
+  "auto_loop": false,
+  "current_process_parameter_mutation": true,
+  "order_actions": false,
+  "automatic_relock_to_shadow": true,
+  "public_ci_scope": "source contract validation only; no runtime canary execution"
+}
