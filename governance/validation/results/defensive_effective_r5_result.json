@@ -1,18 +1,19 @@
 {
   "boundary_diagnostic_tail": "",
-  "distance_to_goal": 36,
+  "distance_to_goal": 35,
   "effective_readiness": "NOT_READY",
+  "end_to_end_consumer_binding": "PASS",
   "execution": false,
-  "immutable_private_candidate": "1cdbe0e48da7efedb999dcb8d3e0f953618fe983",
+  "immutable_private_candidate": "047c81e8575b42f9a4832ac7a774dfafcd3d9fbb",
   "live_activation": false,
   "order_actions": false,
-  "overall_progress": 64,
-  "private_pr": 111,
-  "r5_focused_test_count": 12,
+  "overall_progress": 65,
+  "private_pr": 112,
+  "r5_focused_test_count": 13,
   "repository_authority_connection": "PASS",
   "runtime_access": false,
   "runtime_mutation": false,
-  "schema_version": "defensive_effective_r5_public_ci_result_v2",
+  "schema_version": "defensive_effective_r5_public_ci_result_v3",
   "status": "PASS",
   "step_outcomes": {
     "boundary": "success",
@@ -21,5 +22,5 @@
     "tests": "success"
   },
   "task_id": "DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix",
-  "tests_diagnostic_tail": "R5_COUNT=12\n............                                                             [100%]\n12 passed in 0.06s\n"
+  "tests_diagnostic_tail": "R5_COUNT=13\n.............                                                            [100%]\n13 passed in 0.07s\n"
 }

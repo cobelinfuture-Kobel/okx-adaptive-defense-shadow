@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 1cdbe0e48da7efedb999dcb8d3e0f953618fe983
+      PRIVATE_CANDIDATE_SHA: 047c81e8575b42f9a4832ac7a774dfafcd3d9fbb
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,13 +27,13 @@ jobs:
           import json
           from pathlib import Path
           d=json.loads(Path("governance/validation/defensive_effective_r5_candidate.json").read_text())
-          assert d["private_candidate_sha"]=="1cdbe0e48da7efedb999dcb8d3e0f953618fe983"
-          assert d["private_pr"]==111 and d["expected_r5_test_count"]==12
+          assert d["private_candidate_sha"]=="047c81e8575b42f9a4832ac7a774dfafcd3d9fbb"
+          assert d["private_pr"]==112 and d["expected_r5_test_count"]==13
           assert d["exact_inst_id"]=="BTC-USDT-SWAP"
           assert d["exact_action"]=="REDUCE_NEW_INVENTORY_BIAS"
           assert d["exact_parameter"]=="new_inventory_bias"
           assert not any(d[k] for k in ("new_route","new_runtime_publisher","new_service","new_executor","runtime_access","runtime_mutation","live_activation","execution","order_actions"))
-          assert d["overall_progress"]==64 and d["distance_to_goal"]==36
+          assert d["overall_progress"]==65 and d["distance_to_goal"]==35
           assert d["effective_readiness"]=="NOT_READY"
           PY
 
@@ -60,7 +60,7 @@ jobs:
             python -m py_compile adaptive_defense/r5_human_approval_canary_binding.py tests/test_r5_human_approval_canary_binding.py
             R5_COUNT=$(python -m pytest --collect-only -q tests/test_r5_human_approval_canary_binding.py | grep -c '::test_')
             echo "R5_COUNT=$R5_COUNT"
-            test "$R5_COUNT" -eq 12
+            test "$R5_COUNT" -eq 13
             python -m pytest -q tests/test_r5_human_approval_canary_binding.py
           ) > ../r5_tests.log 2>&1
           rc=$?
@@ -76,16 +76,18 @@ jobs:
           python - <<'PY' > ../r5_boundary.log 2>&1
           import json
           from pathlib import Path
-          task="DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix"
+          gate="AWAITING_OPERATOR_R6_EXPLICIT_APPROVAL"
+          successor="DefensiveEffective-R6_OperatorApprovedOneShotDefensiveParameterCanary"
           q=json.loads(Path("docs/roadmap/task_queue.json").read_text())
           c=json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text())
           p=json.loads(Path("docs/governance/r5/latest.json").read_text())
-          assert q["current_task"]==task==c["current_task"]
-          assert q["in_progress_tasks"]==[task]==c["in_progress_tasks"]
-          assert q["next_approved_task"]==task==c["next_approved_task"]
+          assert q["current_task"]==gate==c["current_task"]
+          assert q["in_progress_tasks"]==[]==c["in_progress_tasks"]
+          assert q["next_approved_task"]==gate==c["next_approved_task"]
+          assert q["proposed_next_task"]==successor==c["proposed_next_task"]
           assert q["default_constraints"]==c["default_constraints"]
-          assert p["status"]=="FULLFIX_IMPLEMENTED_LOCAL_PASS_PUBLIC_CI_PENDING"
-          assert p["mainline"]["overall_progress"]==64 and p["mainline"]["distance_to_goal"]==36
+          assert p["status"]=="PASS_CLOSED_REPOSITORY_CONNECTED_APPROVAL_PACKAGE_READY_LIVE_APPLY_LOCKED"
+          assert p["mainline"]["overall_progress"]==65 and p["mainline"]["distance_to_goal"]==35
           for key,value in {"shadow_only":True,"effective":False,"execution_allowed":False,"runtime_access_allowed":False,"runtime_mutation_allowed":False,"live_apply_authorized":False}.items():
               assert q["default_constraints"][key] is value
           source=Path("adaptive_defense/r5_human_approval_canary_binding.py").read_text()
@@ -116,7 +118,7 @@ jobs:
               path=Path(name)
               return path.read_text(errors="replace")[-6000:] if path.exists() else ""
           status="PASS" if all(value=="success" for value in outcomes.values()) else "FAIL"
-          result={"schema_version":"defensive_effective_r5_public_ci_result_v2","task_id":"DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix","status":status,"immutable_private_candidate":"1cdbe0e48da7efedb999dcb8d3e0f953618fe983","private_pr":111,"step_outcomes":outcomes,"tests_diagnostic_tail":tail("r5_tests.log"),"boundary_diagnostic_tail":tail("r5_boundary.log"),"r5_focused_test_count":12,"repository_authority_connection":"PASS" if outcomes["tests"]=="success" else "FAIL","runtime_access":False,"runtime_mutation":False,"live_activation":False,"execution":False,"order_actions":False,"overall_progress":64,"distance_to_goal":36,"effective_readiness":"NOT_READY"}
+          result={"schema_version":"defensive_effective_r5_public_ci_result_v3","task_id":"DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix","status":status,"immutable_private_candidate":"047c81e8575b42f9a4832ac7a774dfafcd3d9fbb","private_pr":112,"step_outcomes":outcomes,"tests_diagnostic_tail":tail("r5_tests.log"),"boundary_diagnostic_tail":tail("r5_boundary.log"),"r5_focused_test_count":13,"repository_authority_connection":"PASS" if outcomes["tests"]=="success" else "FAIL","end_to_end_consumer_binding":"PASS" if outcomes["tests"]=="success" else "FAIL","runtime_access":False,"runtime_mutation":False,"live_activation":False,"execution":False,"order_actions":False,"overall_progress":65,"distance_to_goal":35,"effective_readiness":"NOT_READY"}
           path=Path("governance/validation/results/defensive_effective_r5_result.json")
           path.parent.mkdir(parents=True,exist_ok=True)
           path.write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
