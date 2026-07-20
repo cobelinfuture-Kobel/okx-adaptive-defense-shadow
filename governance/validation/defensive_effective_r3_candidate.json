@@ -1,0 +1,18 @@
+{
+  "schema_version": "defensive_effective_r3_public_ci_candidate_v1",
+  "task_id": "DefensiveEffective-R3_S9EnvelopeGovernorCanaryAuthorityReconciliation_FullFix",
+  "private_candidate_sha": "7a154de36ff373ab04d391a156fb14714cb6658b",
+  "private_pr": 105,
+  "validation_scope": "s9_exact_envelope_to_s14_governor_to_s15_canary_single_authority_lineage",
+  "expected_focused_test_count": 30,
+  "new_production_module": false,
+  "new_runner": false,
+  "new_executor": false,
+  "s9_source_modified": false,
+  "runtime_access": false,
+  "runtime_mutation": false,
+  "live_activation": false,
+  "execution": false,
+  "order_actions": false,
+  "effective_readiness": "NOT_READY"
+}
