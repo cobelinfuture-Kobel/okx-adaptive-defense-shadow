@@ -1,0 +1,24 @@
+{
+  "boundary_diagnostic_tail": "",
+  "distance_to_goal": 36,
+  "effective_readiness": "NOT_READY",
+  "execution": false,
+  "immutable_private_candidate": "516c1d70bbf4874ba6fa18a606dcf3539cf4ca93",
+  "live_activation": false,
+  "order_actions": false,
+  "overall_progress": 64,
+  "private_pr": 111,
+  "r5_focused_test_count": 11,
+  "runtime_access": false,
+  "runtime_mutation": false,
+  "schema_version": "defensive_effective_r5_public_ci_result_v1",
+  "status": "PASS",
+  "step_outcomes": {
+    "boundary": "success",
+    "manifest": "success",
+    "private_checkout": "success",
+    "tests": "success"
+  },
+  "task_id": "DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix",
+  "tests_diagnostic_tail": "R5_COUNT=11\n...........                                                              [100%]\n11 passed in 0.06s\n"
+}
