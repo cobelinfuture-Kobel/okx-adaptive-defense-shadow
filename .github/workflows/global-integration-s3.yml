@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 6e641c8badddcd4598d51f9b354084b39775abcf
+      PRIVATE_CANDIDATE_SHA: f85bdc278a443e03bed2e0a58fbfcb6a3d8278e6
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +27,7 @@ jobs:
           import json
           from pathlib import Path
           d=json.loads(Path("governance/validation/defensive_effective_r4_candidate.json").read_text())
-          assert d["private_candidate_sha"]=="6e641c8badddcd4598d51f9b354084b39775abcf"
+          assert d["private_candidate_sha"]=="f85bdc278a443e03bed2e0a58fbfcb6a3d8278e6"
           assert d["private_pr"]==107 and d["expected_r4_test_count"]==10
           assert d["exact_inst_id"]=="BTC-USDT-SWAP"
           assert d["exact_action"]=="REDUCE_NEW_INVENTORY_BIAS"
@@ -137,7 +137,7 @@ jobs:
           status="PASS" if all(value=="success" for value in outcomes.values()) else "FAIL"
           result={
               "schema_version":"defensive_effective_r4_public_ci_result_v2","task_id":"DefensiveEffective-R4_CurrentRuntimeOneShotCanaryPreflightEvidenceCorrelation_FullFix",
-              "status":status,"immutable_private_candidate":"6e641c8badddcd4598d51f9b354084b39775abcf","private_pr":107,
+              "status":status,"immutable_private_candidate":"f85bdc278a443e03bed2e0a58fbfcb6a3d8278e6","private_pr":107,
               "step_outcomes":outcomes,"tests_diagnostic_tail":tail("r4_tests.log"),"boundary_diagnostic_tail":tail("r4_boundary.log"),
               "r4_focused_test_count":10,"r1_regression_test_count":11,"total_test_count":21,
               "current_runtime_get_proof":"NOT_CLAIMED","runtime_access":False,"runtime_mutation":False,"live_activation":False,"execution":False,"order_actions":False,
@@ -150,7 +150,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add governance/validation/results/defensive_effective_r4_result.json
-          git commit -m "ci: record R4 diagnostic validation" || true
+          git commit -m "ci: record R4 canonical-path validation" || true
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - if: always()
