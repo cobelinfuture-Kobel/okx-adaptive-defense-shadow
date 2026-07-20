@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: 667aa157261143eebfda7abc1e9bdbeba5ce43e5
+      PRIVATE_CANDIDATE_SHA: eb3f7a943966f3810ade590ffd3ce6146eb86c11
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,9 +28,12 @@ jobs:
           import json
           from pathlib import Path
           d=json.loads(Path("governance/validation/defensive_effective_r1d_candidate.json").read_text())
-          assert d["private_candidate_sha"]=="667aa157261143eebfda7abc1e9bdbeba5ce43e5"
-          assert d["private_pr"]==98
-          assert d["validation_scope"]=="existing_runner_parameter_surface_mode"
+          assert d["private_candidate_sha"]=="eb3f7a943966f3810ade590ffd3ce6146eb86c11"
+          assert d["private_pr"]==100
+          assert d["validation_scope"]=="cold_start_and_steady_state_latency_contract"
+          assert d["cold_start_latency_limit_ms"]==5000
+          assert d["steady_state_latency_limit_ms"]==1000
+          assert d["steady_state_sla_relaxed"] is False
           assert d["runtime_proof"]=="NOT_CLAIMED_PENDING_FRESH_PROCESS_GET"
           assert d["effective_readiness"]=="NOT_READY"
           assert not any(d[k] for k in ("new_production_module","new_runner","production_process_replacement","runtime_parameter_mutation","live_apply","execution","order_actions"))
@@ -64,18 +67,19 @@ jobs:
           print(f"FOCUSED_TEST_COUNT={total}")
           PY
 
-      - name: Validate existing-runner safety
+      - name: Validate latency and safety contract
         working-directory: _private
         run: |
           python - <<'PY'
           from pathlib import Path
           runner=Path("tools/run_global_integration_s3_getonlyqa.ps1").read_text()
           test=Path("tests/test_s3_authoritative_publisher_prime.py").read_text()
-          for token in ('[ValidateSet("MISSING", "PRESENT")]', '$ExpectedParameterSurface = "MISSING"', 'R1D_SIGNAL_SAFETY_PARAMETER_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED', 'SIGNAL_SAFETY_AND_PARAMETER_READBACK_PROVEN', 'PRESENT_NEUTRAL_SHADOW_READONLY', 'consumer_state -ne "MATCH"', 'parameter_revision', 'parameter_source_sha256', 'runtime_consumer_sha256', 'production_listener_unchanged = $productionUnchanged', 'Stop-Process -Id $canaryProcess.Id'):
+          for token in ('[int]$StartupReadbackLatencyLimitMs = 5000','[int]$ReadbackLatencyLimitMs = 1000','$snapshot1LatencyMs -gt $StartupReadbackLatencyLimitMs','$snapshot2LatencyMs -gt $ReadbackLatencyLimitMs','Initial readiness GET-only latency exceeded','Steady-state GET-only latency exceeded','COLD_START_BOUNDED_AND_STEADY_STATE_STRICT_V1','startup_readback_latency_limit_ms = $StartupReadbackLatencyLimitMs','steady_state_readback_latency_limit_ms = $ReadbackLatencyLimitMs','snapshot_1_latency_ms = $snapshot1LatencyMs','snapshot_2_latency_ms = $snapshot2LatencyMs','R1D_SIGNAL_SAFETY_PARAMETER_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED','SIGNAL_SAFETY_AND_PARAMETER_READBACK_PROVEN','PRESENT_NEUTRAL_SHADOW_READONLY','consumer_state -ne "MATCH"','production_listener_unchanged = $productionUnchanged','Stop-Process -Id $canaryProcess.Id'):
               assert token in runner
+          assert 'if ($snapshot1LatencyMs -gt $ReadbackLatencyLimitMs -or' not in runner
           for forbidden in ("CreateEvidenceBundle","CreateFromDirectory","place_orders","cancel_all_orders","reduce_positions"):
               assert forbidden not in runner
-          assert "test_existing_s3_runner_has_bounded_r1d_parameter_mode_without_new_runner" in test
+          assert "test_existing_runner_separates_cold_start_and_steady_state_latency_without_relaxing_steady_sla" in test
           python_source=runner.split("$pythonSource = @'",1)[1].split("\n'@",1)[0]
           compile(python_source,"<r1d-existing-runner>","exec")
           assert "BackgroundRuntime" not in python_source
@@ -89,7 +93,7 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          m={"schema_version":"defensive_effective_r1d_public_ci_result_v1","task_id":"DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix","validation_scope":"existing_runner_parameter_surface_mode","status":"PASS","immutable_private_candidate":"667aa157261143eebfda7abc1e9bdbeba5ce43e5","private_pr":98,"compile":"PASS","focused_tests":"PASS","governance":"PASS","new_production_modules":0,"new_runners":0,"runtime_parameter_mutation":False,"live":False,"execution":False,"order_actions":False,"runtime_proof":"NOT_CLAIMED_PENDING_FRESH_PROCESS_GET","effective_readiness":"NOT_READY"}
+          m={"schema_version":"defensive_effective_r1d_public_ci_result_v1","task_id":"DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix","validation_scope":"cold_start_and_steady_state_latency_contract","status":"PASS","immutable_private_candidate":"eb3f7a943966f3810ade590ffd3ce6146eb86c11","private_pr":100,"compile":"PASS","focused_tests":"PASS","governance":"PASS","cold_start_latency_limit_ms":5000,"steady_state_latency_limit_ms":1000,"steady_state_sla_relaxed":False,"new_production_modules":0,"new_runners":0,"runtime_parameter_mutation":False,"live":False,"execution":False,"order_actions":False,"runtime_proof":"NOT_CLAIMED_PENDING_FRESH_PROCESS_GET","effective_readiness":"NOT_READY"}
           p=Path("governance/validation/results/defensive_effective_r1d_result.json")
           p.parent.mkdir(parents=True,exist_ok=True)
           p.write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
@@ -97,4 +101,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add governance/validation/results/defensive_effective_r1d_result.json
-          if ! git diff --cached --quiet; then git commit -m "ci: record R1D existing-runner validation"; git push origin "HEAD:${GITHUB_REF_NAME}"; fi
+          if ! git diff --cached --quiet; then git commit -m "ci: record R1D latency contract validation"; git push origin "HEAD:${GITHUB_REF_NAME}"; fi
