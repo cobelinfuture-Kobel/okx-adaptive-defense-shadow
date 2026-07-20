@@ -10,10 +10,10 @@
   "r6_focused_test_count": 13,
   "runtime_evidence_required": true,
   "schema_version": "defensive_effective_r6_public_ci_result_v1",
-  "status": "FAIL",
+  "status": "PASS",
   "step_outcomes": {
     "boundary": "success",
-    "manifest": "failure",
+    "manifest": "success",
     "private_checkout": "success",
     "tests": "success"
   },
