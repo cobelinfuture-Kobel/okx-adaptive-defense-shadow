@@ -1,22 +1,16 @@
 {
-  "schema_version": "global_integration_s3_public_ci_candidate_v1",
-  "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "private_candidate_sha": "da9e30f68795fc9acf2603895ca030c24911f7cb",
-  "private_pr": 95,
-  "expected_features": [
-    "exact five-signal catalog remains on the existing publisher lineage",
-    "S3 GET-only canary reads production .env, Setting.txt, Strategy.txt, and runtime_config.json",
-    "production config inputs are read-only and are not copied into the candidate worktree",
-    "logs, shadow artifacts, backtests, and other writable paths remain candidate-local",
-    "focused regression locks S3-only path binding and non-S3 path isolation",
-    "runtime proof remains unclaimed until the final MiniPC GET-only acceptance"
-  ],
+  "schema_version": "defensive_effective_r1d_public_ci_candidate_v1",
+  "task_id": "DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix",
+  "private_candidate_sha": "d6c909ca5e04e8c98e831df6faf9a57ca0fe804e",
+  "private_pr": 97,
+  "expected_features": ["neutral authority", "stable revision", "source digest", "read-only consumer", "fail closed", "fresh-process proof pending"],
+  "new_production_module": false,
+  "new_runner": false,
   "production_process_replacement": false,
   "runtime_parameter_mutation": false,
   "live_apply": false,
   "execution": false,
   "order_actions": false,
-  "evidence_bundle": false,
-  "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
+  "runtime_proof": "NOT_CLAIMED_PENDING_FRESH_PROCESS_GET",
   "effective_readiness": "NOT_READY"
 }
