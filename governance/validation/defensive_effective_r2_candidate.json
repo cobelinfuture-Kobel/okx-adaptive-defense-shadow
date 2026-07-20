@@ -6,6 +6,7 @@
   "validation_scope": "r1d_parameter_to_s14_governor_to_s15_canary_shadow_contract_lineage",
   "expected_focused_test_count": 27,
   "new_action_class": "REDUCE_NEW_INVENTORY_BIAS",
+  "trigger_mode": "R2_PUSH_ONLY_AFTER_PR_QUEUE_ISOLATION",
   "new_production_module": false,
   "new_runner": false,
   "new_executor": false,
