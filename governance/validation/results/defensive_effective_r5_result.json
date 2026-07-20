@@ -3,22 +3,23 @@
   "distance_to_goal": 36,
   "effective_readiness": "NOT_READY",
   "execution": false,
-  "immutable_private_candidate": "516c1d70bbf4874ba6fa18a606dcf3539cf4ca93",
+  "immutable_private_candidate": "1cdbe0e48da7efedb999dcb8d3e0f953618fe983",
   "live_activation": false,
   "order_actions": false,
   "overall_progress": 64,
   "private_pr": 111,
-  "r5_focused_test_count": 11,
+  "r5_focused_test_count": 12,
+  "repository_authority_connection": "PASS",
   "runtime_access": false,
   "runtime_mutation": false,
-  "schema_version": "defensive_effective_r5_public_ci_result_v1",
-  "status": "FAIL",
+  "schema_version": "defensive_effective_r5_public_ci_result_v2",
+  "status": "PASS",
   "step_outcomes": {
     "boundary": "success",
-    "manifest": "failure",
+    "manifest": "success",
     "private_checkout": "success",
     "tests": "success"
   },
   "task_id": "DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix",
-  "tests_diagnostic_tail": "R5_COUNT=11\n...........                                                              [100%]\n11 passed in 0.05s\n"
+  "tests_diagnostic_tail": "R5_COUNT=12\n............                                                             [100%]\n12 passed in 0.06s\n"
 }
