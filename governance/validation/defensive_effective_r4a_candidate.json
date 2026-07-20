@@ -3,7 +3,7 @@
   "task_id": "DefensiveEffective-R4A_CurrentRuntimeEvidenceContractAlignmentAndConditionDisposition_FullFix",
   "private_repository": "cobelinfuture-Kobel/okx_bot_private",
   "private_candidate_branch": "agent/defensive-effective-r4a-contract-alignment",
-  "private_candidate_sha": "7df832fe523e17b9449aaef6d85cc923cb2d1dec",
+  "private_candidate_sha": "916f7395af5db8e2f126d21c5501f659cd1c6323",
   "scope": "R4_CURRENT_RUNTIME_EVIDENCE_CONTRACT_ALIGNMENT_AND_CONDITION_DISPOSITION",
   "inst_id": "BTC-USDT-SWAP",
   "action": "REDUCE_NEW_INVENTORY_BIAS",
