@@ -1,0 +1,22 @@
+{
+  "authority_lineage_and_safety": "PASS",
+  "compile": "PASS",
+  "effective_readiness": "NOT_READY",
+  "execution": false,
+  "focused_test_count": 30,
+  "focused_tests": "PASS",
+  "immutable_private_candidate": "7a154de36ff373ab04d391a156fb14714cb6658b",
+  "live_activation": false,
+  "new_executors": 0,
+  "new_production_modules": 0,
+  "new_runners": 0,
+  "order_actions": false,
+  "private_pr": 105,
+  "runtime_access": false,
+  "runtime_mutation": false,
+  "s9_source_modified": false,
+  "schema_version": "defensive_effective_r3_public_ci_result_v1",
+  "status": "PASS",
+  "task_id": "DefensiveEffective-R3_S9EnvelopeGovernorCanaryAuthorityReconciliation_FullFix",
+  "validation_scope": "s9_exact_envelope_to_s14_governor_to_s15_canary_single_authority_lineage"
+}
