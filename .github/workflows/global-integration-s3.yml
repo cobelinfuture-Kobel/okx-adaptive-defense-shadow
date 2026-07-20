@@ -1,44 +1,38 @@
-name: Global Integration S3 Public CI
+name: Defensive Effective R1D Public CI
 
 on:
   push:
-    branches:
-      - "global-integration/s3-*"
+    branches: ["defensive-effective/r1d-*"]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  validate-s3:
+  validate-r1d:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PRIVATE_CANDIDATE_SHA: da9e30f68795fc9acf2603895ca030c24911f7cb
+      PRIVATE_CANDIDATE_SHA: d6c909ca5e04e8c98e831df6faf9a57ca0fe804e
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
           persist-credentials: true
 
-      - name: Validate candidate manifest
+      - name: Validate manifest
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          data = json.loads(Path("governance/validation/global_integration_s3_candidate.json").read_text())
-          assert data["private_candidate_sha"] == "da9e30f68795fc9acf2603895ca030c24911f7cb"
-          assert data["private_pr"] == 95
-          assert len(data["expected_features"]) == 6
-          assert not any(data[key] for key in (
-            "production_process_replacement", "runtime_parameter_mutation",
-            "live_apply", "execution", "order_actions", "evidence_bundle",
-          ))
-          assert data["runtime_proof"] == "NOT_CLAIMED_PENDING_MINIPC"
-          assert data["effective_readiness"] == "NOT_READY"
+          d=json.loads(Path("governance/validation/defensive_effective_r1d_candidate.json").read_text())
+          assert d["private_candidate_sha"]=="d6c909ca5e04e8c98e831df6faf9a57ca0fe804e"
+          assert d["private_pr"]==97
+          assert d["runtime_proof"]=="NOT_CLAIMED_PENDING_FRESH_PROCESS_GET"
+          assert d["effective_readiness"]=="NOT_READY"
+          assert not any(d[k] for k in ("new_production_module","new_runner","production_process_replacement","runtime_parameter_mutation","live_apply","execution","order_actions"))
           PY
 
       - name: Checkout immutable Private candidate
@@ -51,138 +45,60 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Compile existing Python
+      - name: Compile and run focused regressions
         working-directory: _private
         run: |
-          python -m py_compile \
-            runtime_paths.py \
-            adaptive_defense/five_axis_control_plan_shadow_builder/__init__.py \
-            adaptive_defense/five_axis_control_plan_shadow_builder.py \
-            adaptive_defense/canonical_signal_eligibility.py \
-            adaptive_defense/r1_runtime_readback.py \
-            tests/test_five_axis_runtime_publisher.py \
-            tests/test_canonical_signal_eligibility.py \
-            tests/test_r1_runtime_readback.py \
-            tests/test_s3_authoritative_publisher_prime.py
-
-      - name: Run focused existing-lineage regressions
-        working-directory: _private
-        run: |
+          python -m py_compile adaptive_defense/canonical_signal_eligibility.py adaptive_defense/r1_runtime_readback.py tests/test_r1_runtime_readback.py
           python - <<'PY'
           import runpy
-          total = 0
-          for path in (
-              "tests/test_five_axis_runtime_publisher.py",
-              "tests/test_canonical_signal_eligibility.py",
-              "tests/test_r1_runtime_readback.py",
-              "tests/test_s3_authoritative_publisher_prime.py",
-          ):
-              namespace = runpy.run_path(path)
-              tests = sorted((name, value) for name, value in namespace.items() if name.startswith("test_") and callable(value))
-              assert tests
-              for name, test in tests:
-                  test()
-                  total += 1
-                  print(f"PASS {path}::{name}")
-          print(f"FOCUSED_TEST_COUNT={total}")
+          p="tests/test_r1_runtime_readback.py"
+          ns=runpy.run_path(p)
+          tests=sorted((n,f) for n,f in ns.items() if n.startswith("test_") and callable(f))
+          assert tests
+          for n,f in tests:
+              f()
+              print(f"PASS {p}::{n}")
+          print(f"FOCUSED_TEST_COUNT={len(tests)}")
           PY
 
-      - name: Validate S3 orchestration and governance contract
+      - name: Validate lineage and safety
         working-directory: _private
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-
-          task = "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA"
-          queue = json.loads(Path("docs/roadmap/task_queue.json").read_text())
-          control = json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text())
-          progress = json.loads(Path("docs/governance/s3/latest.json").read_text())
-          assert queue["current_task"] == task == control["current_task"]
-          assert queue["in_progress_tasks"] == [task]
-          assert control["in_progress_tasks"] == [task]
-          assert queue["next_approved_task"] == task
-          assert queue["default_constraints"]["runtime_mutation_allowed"] is False
-          assert queue["default_constraints"]["live_apply_authorized"] is False
-          assert queue["default_constraints"]["production_process_restart_allowed"] is False
-          assert queue["default_constraints"]["isolated_canary_process_allowed"] is True
-          assert progress["status"] == "S3_AUTHORITATIVE_PUBLISHER_PRIME_FULLFIX_MERGED_PUBLIC_CI_PASS_MINIPC_RERUN_REQUIRED"
-          assert progress["design"]["production_python_modules_added"] == 0
-          assert progress["design"]["canary_background_runtime_enabled"] is False
-          assert progress["design"]["server_lifespan_enabled"] is False
-          assert progress["safety"]["runtime_proof"] == "NOT_CLAIMED"
-
-          runtime = Path("runtime.py").read_text()
-          loop_start = runtime.index("async def _strategy_intelligence_loop")
-          loop_end = runtime.index("await asyncio.sleep(20)", loop_start)
-          loop_source = runtime[loop_start:loop_end]
-          assert loop_source.index("refresh_strategy_intelligence()") < loop_source.index("refresh_v11_policy_diagnostics()")
-
-          runner = Path("tools/run_global_integration_s3_getonlyqa.ps1").read_text()
-          assert "CreateEvidenceBundle" not in runner
-          assert "CreateFromDirectory" not in runner
-          assert 'lifespan="off"' in runner
-          assert "OKX_WS_LOGIN_ONLY" in runner
-          assert "OKX_ENABLE_TEST_LIFESPAN_RUNTIME" in runner
-          assert "refresh_v11_policy_diagnostics(force=True)" in runner
-          assert runner.index("refresh_strategy_intelligence()") < runner.index("refresh_v11_policy_diagnostics(force=True)")
-          assert "S3_SIGNAL_SAFETY_FRESH_PROCESS_GET_ONLY_QA_PASS_PRODUCTION_UNCHANGED" in runner
-          assert runner.index('snapshot_1.json') < runner.index("Assert-ReadbackSurface -Data $snapshot1")
-          assert "readback_diagnostics = $readbackDiagnostics" in runner
-
-          paths = Path("runtime_paths.py").read_text()
-          assert 'S3_GET_ONLY_QA_SENTINEL = "GLOBAL_INTEGRATION_S3_GET_ONLY_QA"' in paths
-          assert '(".env",)' in paths
-          assert '("Setting.txt",)' in paths
-          assert '("Strategy.txt",)' in paths
-          assert '("data", "runtime_config.json")' in paths
-          assert 'candidate_root = os.getenv("OKX_S3_CANDIDATE_ROOT", "").strip()' in paths
-          assert "production_root = Path.cwd().resolve()" in paths
-          assert 'return get_app_root().joinpath(*normalized_parts)' in paths
-          assert '("trading.log",)' not in paths.split("S3_READONLY_CONFIG_PATHS =", 1)[1].split("}", 1)[0]
-          assert '("logs",)' not in paths.split("S3_READONLY_CONFIG_PATHS =", 1)[1].split("}", 1)[0]
-
-          regression = Path("tests/test_s3_authoritative_publisher_prime.py").read_text()
-          assert "test_s3_canary_binds_only_readonly_config_inputs_to_production_root" in regression
-          assert "test_non_s3_runtime_paths_remain_candidate_local" in regression
-          assert '"trading.log"' in regression
-          assert '"logs", "five_axis_control_plan_shadow_latest.json"' in regression
+          task="DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix"
+          q=json.loads(Path("docs/roadmap/task_queue.json").read_text())
+          c=json.loads(Path("docs/roadmap/task_queue_parts/control_state.json").read_text())
+          p=json.loads(Path("docs/governance/r1d/latest.json").read_text())
+          assert q["current_task"]==task==c["current_task"]
+          assert q["in_progress_tasks"]==[task]==c["in_progress_tasks"]
+          assert q["next_approved_task"]==task
+          for k,v in {"shadow_only":True,"effective":False,"execution_allowed":False,"runtime_access_allowed":False,"runtime_mutation_allowed":False,"live_apply_authorized":False,"isolated_canary_process_allowed":False}.items():
+              assert q["default_constraints"][k] is v
+          assert p["status"]=="FULLFIX_IMPLEMENTED_PUBLIC_CI_PENDING"
+          assert p["progress"]["overall_after_source_fullfix"]==60
+          assert p["progress"]["distance_after_source_fullfix"]==40
+          s=Path("adaptive_defense/r1_runtime_readback.py").read_text()
+          for token in ("build_new_inventory_bias_runtime_authority","consume_new_inventory_bias_runtime_authority",'PARAMETER_NEUTRAL_VALUE = 0.0','"PRESENT_NEUTRAL_SHADOW_READONLY"','"DENIED_FAIL_CLOSED"','"runtime_mutation_allowed": False','"live_apply_authorized": False','"order_action_allowed": False'):
+              assert token in s
+          for forbidden in ("MemoryParameterAdapter","setattr(","requests.","httpx."):
+              assert forbidden not in s
           PY
 
-      - name: Persist S3 result marker
+      - name: Persist R1D result
         if: github.event_name == 'push'
         run: |
           git pull --rebase origin "${GITHUB_REF_NAME}"
           python - <<'PY'
           import json
           from pathlib import Path
-          marker = {
-              "schema_version": "global_integration_s3_public_ci_result_v1",
-              "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-              "validation_scope": "readonly_production_config_binding_fullfix",
-              "status": "PASS",
-              "immutable_private_candidate": "da9e30f68795fc9acf2603895ca030c24911f7cb",
-              "compile": "PASS",
-              "focused_tests": "PASS",
-              "governance": "PASS",
-              "production_python_modules_added": 0,
-              "production_process_replacement": False,
-              "runtime_parameter_mutation": False,
-              "live": False,
-              "execution": False,
-              "order_actions": False,
-              "evidence_bundle": False,
-              "runtime_proof": "NOT_CLAIMED_PENDING_MINIPC",
-              "effective_readiness": "NOT_READY",
-          }
-          path = Path("governance/validation/results/global_integration_s3_result.json")
-          path.parent.mkdir(parents=True, exist_ok=True)
-          path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
+          m={"schema_version":"defensive_effective_r1d_public_ci_result_v1","task_id":"DefensiveEffective-R1D_NewInventoryBiasRuntimeAuthorityAndReadback_FullFix","status":"PASS","immutable_private_candidate":"d6c909ca5e04e8c98e831df6faf9a57ca0fe804e","private_pr":97,"compile":"PASS","focused_tests":"PASS","governance":"PASS","new_production_modules":0,"new_runners":0,"runtime_parameter_mutation":False,"live":False,"execution":False,"order_actions":False,"runtime_proof":"NOT_CLAIMED_PENDING_FRESH_PROCESS_GET","effective_readiness":"NOT_READY"}
+          p=Path("governance/validation/results/defensive_effective_r1d_result.json")
+          p.parent.mkdir(parents=True,exist_ok=True)
+          p.write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add governance/validation/results/global_integration_s3_result.json
-          if ! git diff --cached --quiet; then
-            git commit -m "ci: record S3 readonly config binding validation"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+          git add governance/validation/results/defensive_effective_r1d_result.json
+          if ! git diff --cached --quiet; then git commit -m "ci: record R1D validation"; git push origin "HEAD:${GITHUB_REF_NAME}"; fi
