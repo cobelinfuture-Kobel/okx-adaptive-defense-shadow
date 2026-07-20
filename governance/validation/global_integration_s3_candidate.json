@@ -1,15 +1,15 @@
 {
   "schema_version": "global_integration_s3_public_ci_candidate_v1",
   "task_id": "GlobalIntegrationGovernance-S3_R1SignalSafetyFreshProcessGETOnlyQA",
-  "private_candidate_sha": "dc6a6bb163e97d13b03c02440555f0888d76f1c1",
-  "private_pr": 94,
+  "private_candidate_sha": "da9e30f68795fc9acf2603895ca030c24911f7cb",
+  "private_pr": 95,
   "expected_features": [
-    "existing S3 fresh-process runner reused without a parallel runner",
-    "canary mirrors the production strategy-intelligence then V11 publisher sequence",
-    "existing five-axis and canonical AppState publishers are invoked explicitly",
-    "BackgroundRuntime and server lifespan remain disabled",
-    "focused regression locks production and canary invocation parity",
-    "runtime proof remains unclaimed until MiniPC GET-only acceptance"
+    "exact five-signal catalog remains on the existing publisher lineage",
+    "S3 GET-only canary reads production .env, Setting.txt, Strategy.txt, and runtime_config.json",
+    "production config inputs are read-only and are not copied into the candidate worktree",
+    "logs, shadow artifacts, backtests, and other writable paths remain candidate-local",
+    "focused regression locks S3-only path binding and non-S3 path isolation",
+    "runtime proof remains unclaimed until the final MiniPC GET-only acceptance"
   ],
   "production_process_replacement": false,
   "runtime_parameter_mutation": false,
