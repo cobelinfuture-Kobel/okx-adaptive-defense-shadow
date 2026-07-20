@@ -12,13 +12,13 @@
   "runtime_access": false,
   "runtime_mutation": false,
   "schema_version": "defensive_effective_r5_public_ci_result_v1",
-  "status": "PASS",
+  "status": "FAIL",
   "step_outcomes": {
     "boundary": "success",
-    "manifest": "success",
+    "manifest": "failure",
     "private_checkout": "success",
     "tests": "success"
   },
   "task_id": "DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix",
-  "tests_diagnostic_tail": "R5_COUNT=11\n...........                                                              [100%]\n11 passed in 0.06s\n"
+  "tests_diagnostic_tail": "R5_COUNT=11\n...........                                                              [100%]\n11 passed in 0.05s\n"
 }
