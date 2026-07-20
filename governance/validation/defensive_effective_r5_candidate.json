@@ -1,11 +1,11 @@
 {
   "schema_version": "defensive_effective_r5_public_ci_candidate_v1",
   "task_id": "DefensiveEffective-R5_ExplicitHumanApprovalAndOneShotCanaryAuthorizationBinding_FullFix",
-  "private_candidate_sha": "1cdbe0e48da7efedb999dcb8d3e0f953618fe983",
-  "private_pr": 111,
+  "private_candidate_sha": "047c81e8575b42f9a4832ac7a774dfafcd3d9fbb",
+  "private_pr": 112,
   "validation_scope": "explicit_human_decision_package_and_exact_one_shot_canary_authorization_binding",
-  "workflow_revision": "R5_PUBLIC_AUTHORITY_V2_REPOSITORY_CONNECTED",
-  "expected_r5_test_count": 12,
+  "workflow_revision": "R5_PUBLIC_AUTHORITY_V3_END_TO_END_SEAL",
+  "expected_r5_test_count": 13,
   "exact_inst_id": "BTC-USDT-SWAP",
   "exact_action": "REDUCE_NEW_INVENTORY_BIAS",
   "exact_parameter": "new_inventory_bias",
@@ -18,7 +18,7 @@
   "live_activation": false,
   "execution": false,
   "order_actions": false,
-  "overall_progress": 64,
-  "distance_to_goal": 36,
+  "overall_progress": 65,
+  "distance_to_goal": 35,
   "effective_readiness": "NOT_READY"
 }
