@@ -1,7 +1,10 @@
 {
-  "private_candidate_sha": "667aa157261143eebfda7abc1e9bdbeba5ce43e5",
-  "private_pr": 98,
-  "validation_scope": "existing_runner_parameter_surface_mode",
+  "private_candidate_sha": "eb3f7a943966f3810ade590ffd3ce6146eb86c11",
+  "private_pr": 100,
+  "validation_scope": "cold_start_and_steady_state_latency_contract",
+  "cold_start_latency_limit_ms": 5000,
+  "steady_state_latency_limit_ms": 1000,
+  "steady_state_sla_relaxed": false,
   "new_production_module": false,
   "new_runner": false,
   "production_process_replacement": false,
