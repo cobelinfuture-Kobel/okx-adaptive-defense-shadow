@@ -1,0 +1,22 @@
+{
+  "approval_binding": "PASS",
+  "automatic_loop": false,
+  "boundary_diagnostic_tail": "",
+  "cas_replay_restore_relock": "PASS",
+  "current_process_execution_performed": false,
+  "immutable_private_candidate": "0795327809ac66f3a5dda0c96716a96788c3ea93",
+  "order_actions": false,
+  "private_pr": 114,
+  "r6_focused_test_count": 13,
+  "runtime_evidence_required": true,
+  "schema_version": "defensive_effective_r6_public_ci_result_v1",
+  "status": "FAIL",
+  "step_outcomes": {
+    "boundary": "success",
+    "manifest": "failure",
+    "private_checkout": "success",
+    "tests": "success"
+  },
+  "task_id": "DefensiveEffective-R6_OperatorApprovedOneShotDefensiveParameterCanary",
+  "tests_diagnostic_tail": "R6_COUNT=13\n.............                                                            [100%]\n13 passed in 0.09s\n"
+}
